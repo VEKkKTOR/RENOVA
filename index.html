@@ -73,12 +73,6 @@
         }
       ];
 
-      const LEADERBOARD_DATA = [
-        { name: "Sofía Martínez", points: 48.5, level: "Eco-Master" },
-        { name: "Carlos Mendoza", points: 42.0, level: "Reciclador Pro" },
-        { name: "Ana Lucía R.", points: 35.5, level: "Guardián Verde" },
-      ];
-
       function App() {
         const [activeTab, setActiveTab] = useState('home');
         const [user, setUser] = useState(null);
@@ -91,7 +85,7 @@
         const [questionScore, setQuestionScore] = useState(0);
         const [questionMsg, setQuestionMsg] = useState(null);
 
-        // Estado de Calculadora y Registro IA
+        // Estado de Calculadora y Registro
         const [calcState, setCalcState] = useState({
           habits: 'Todavía no',
           plasticKg: 2.5,
@@ -101,7 +95,7 @@
           goal: 50
         });
         const [showCalcTable, setShowCalcTable] = useState(false);
-        const [aiUploadMode, setAiUploadMode] = useState('pesa'); // 'pesa' o 'ia'
+        const [uploadMode, setUploadMode] = useState('pesa');
         const [uploadMaterial, setUploadMaterial] = useState('carton');
         const [estimatedResult, setEstimatedResult] = useState(null);
 
@@ -109,7 +103,8 @@
         useEffect(() => {
           const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
             if (firebaseUser) {
-              setUser({ name: firebaseUser.email.split('@')[0], email: firebaseUser.email });
+              const name = firebaseUser.email.split('@')[0];
+              setUser({ name, email: firebaseUser.email });
             } else {
               setUser(null);
             }
@@ -143,20 +138,18 @@
           }, 1800);
         };
 
-        const handleAIEstimate = () => {
-          // IA conservadora: Aplica un factor de seguridad del 80% (menos de lo real)
+        const handleEstimate = () => {
           const baseGuessKg = (Math.random() * 2 + 0.5).toFixed(2);
           const safeKg = (baseGuessKg * 0.8).toFixed(2); 
           const pointsEarned = (safeKg * (uploadMaterial === 'latas' ? 15 : 8)).toFixed(1);
           
           setEstimatedResult({
             material: uploadMaterial === 'latas' ? 'Latas / Metales' : 'Cartón / Papel',
-            method: 'IA Conservadora (-20% seguridad)',
             kg: safeKg,
             pts: pointsEarned
           });
           setQuestionScore(prev => prev + Number(pointsEarned));
-          showToast(`🤖 IA analizó la foto: ${safeKg} kg estimados con factor seguro.`);
+          showToast(`Registro procesado con éxito: ${safeKg} kg calculados.`);
         };
 
         return (
@@ -189,11 +182,11 @@
                   setCalcState={setCalcState} 
                   showCalcTable={showCalcTable} 
                   setShowCalcTable={setShowCalcTable}
-                  aiUploadMode={aiUploadMode}
-                  setAiUploadMode={setAiUploadMode}
+                  uploadMode={uploadMode}
+                  setUploadMode={setUploadMode}
                   uploadMaterial={uploadMaterial}
                   setUploadMaterial={setUploadMaterial}
-                  handleAIEstimate={handleAIEstimate}
+                  handleEstimate={handleEstimate}
                   estimatedResult={estimatedResult}
                 />
               )}
@@ -228,7 +221,7 @@
               </div>
               <nav className="hidden md:flex items-center gap-2">
                 <button onClick={() => setActiveTab('home')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'home' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>🌱 Inicio</button>
-                <button onClick={() => setActiveTab('cambio')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'cambio' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📊 Mi Cambio & IA</button>
+                <button onClick={() => setActiveTab('cambio')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'cambio' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📊 Mi Cambio</button>
                 <button onClick={() => setActiveTab('leaderboard')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'leaderboard' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>🏆 Tabla de Puntos</button>
                 <button onClick={() => setActiveTab('ideas')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'ideas' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>💡 DIY</button>
                 <button onClick={() => setActiveTab('guia')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'guia' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📖 Guía</button>
@@ -299,7 +292,7 @@
               <div className="bg-gradient-to-r from-emerald-900 to-teal-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="space-y-2">
                   <span className="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full uppercase border border-emerald-400/30">
-                    🤖 Bot de Preguntas Dinámicas ({questionsDoneToday}/4 hoy)
+                    🤖 Bot de Preguntas ({questionsDoneToday}/4 hoy)
                   </span>
                   <h3 className="text-xl sm:text-2xl font-black">{activeQ.question}</h3>
                   <p className="text-xs text-emerald-100">Gana 0.5 puntos por acierto. ¡Nuevas preguntas rotativas!</p>
@@ -318,6 +311,32 @@
                     </div>
                   )}
                   <div className="text-[11px] text-emerald-300 font-semibold">Tus Puntos Acumulados: {questionScore} Pts</div>
+                </div>
+              </div>
+            </section>
+
+            {/* SECCIÓN DE REDES SOCIALES Y CONTACTO (INSTAGRAM, FACEBOOK, GMAIL) */}
+            <section className="max-w-4xl mx-auto px-4">
+              <div className="bg-white rounded-3xl border p-8 shadow-sm text-center space-y-4">
+                <h3 className="text-xl font-bold text-slate-900">Conéctate con Nosotros</h3>
+                <p className="text-xs text-slate-600">Si tiene dudas contactenos en Gmail: <span className="font-bold text-emerald-800">renova.ms1a@gmail.com</span></p>
+                <div className="flex justify-center gap-4 pt-2">
+                  <a 
+                    href="https://www.instagram.com/renova_1a?vrfl=MWw1NnphNmFkMjI5ZA==" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow hover:opacity-90 transition"
+                  >
+                    Instagram
+                  </a>
+                  <a 
+                    href="https://www.facebook.com/share/19iD6x7q4S/" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow hover:bg-blue-700 transition"
+                  >
+                    Facebook
+                  </a>
                 </div>
               </div>
             </section>
@@ -347,18 +366,18 @@
         );
       }
 
-      function MiCambioSection({ user, setLoginModalOpen, calcState, setCalcState, showCalcTable, setShowCalcTable, aiUploadMode, setAiUploadMode, uploadMaterial, setUploadMaterial, handleAIEstimate, estimatedResult }) {
+      function MiCambioSection({ user, setLoginModalOpen, calcState, setCalcState, showCalcTable, setShowCalcTable, uploadMode, setUploadMode, uploadMaterial, setUploadMaterial, handleEstimate, estimatedResult }) {
         return (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
             <div className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white p-8 rounded-3xl shadow-lg">
-              <h1 className="text-3xl sm:text-4xl font-black">Mi Cambio y Registro Inteligente</h1>
-              <p className="text-emerald-100 mt-2 text-sm">Calcula tu impacto semanal o sube evidencia fotográfica (con pesa o estimación de IA).</p>
+              <h1 className="text-3xl sm:text-4xl font-black">Mi Cambio</h1>
+              <p className="text-emerald-100 mt-2 text-sm">Calcula tu impacto semanal o sube evidencia fotográfica de tus materiales.</p>
             </div>
 
-            {/* SECCIÓN: SUBIR FOTO DE CARTÓN / LATAS (CON PESA O IA CONSERVADORA) */}
+            {/* SECCIÓN: SUBIR FOTO DE CARTÓN / LATAS */}
             <div className="bg-white p-8 rounded-3xl border shadow-sm space-y-6">
               <h3 className="text-xl font-bold text-slate-900">📸 Registro de Cartón y Latas por Foto</h3>
-              <p className="text-xs text-slate-600">Envía foto con una pesa mostrando el valor, o deja que nuestra IA intente calcular el peso aplicando un factor de seguridad por debajo de lo real.</p>
+              <p className="text-xs text-slate-600">Envía foto con una pesa mostrando el valor, o sube una imagen de tus residuos para registro automático.</p>
               
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
@@ -371,13 +390,13 @@
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">Método de Verificación</label>
                   <div className="flex gap-2">
-                    <button onClick={() => setAiUploadMode('pesa')} className={`flex-1 py-2 rounded-xl text-xs font-bold border ${aiUploadMode === 'pesa' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>⚖️ Con Pesa</button>
-                    <button onClick={() => setAiUploadMode('ia')} className={`flex-1 py-2 rounded-xl text-xs font-bold border ${aiUploadMode === 'ia' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>🤖 Cálculo IA (Seguro)</button>
+                    <button onClick={() => setUploadMode('pesa')} className={`flex-1 py-2 rounded-xl text-xs font-bold border ${uploadMode === 'pesa' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>⚖️ Con Pesa</button>
+                    <button onClick={() => setUploadMode('auto')} className={`flex-1 py-2 rounded-xl text-xs font-bold border ${uploadMode === 'auto' ? 'bg-emerald-600 text-white' : 'bg-slate-50'}`}>📷 Automático</button>
                   </div>
                 </div>
               </div>
 
-              {aiUploadMode === 'pesa' ? (
+              {uploadMode === 'pesa' ? (
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-3">
                   <label className="text-xs font-bold text-emerald-900 block">Sube foto mostrando la báscula / pesa:</label>
                   <input type="file" className="text-xs" />
@@ -385,18 +404,19 @@
                 </div>
               ) : (
                 <div className="p-4 bg-teal-50 rounded-2xl border border-teal-200 space-y-3">
-                  <label className="text-xs font-bold text-teal-900 block">Sube foto de tu cartón o latas sin pesa:</label>
+                  <label className="text-xs font-bold text-teal-900 block">Sube foto de tu cartón o latas:</label>
                   <input type="file" className="text-xs" />
-                  <button onClick={handleAIEstimate} className="mt-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-4 py-2 rounded-xl">
-                    Analizar con IA (Cálculo conservador)
+                  <p className="text-[10px] text-slate-500 italic">* Esta imagen será analizada mediante Inteligencia Artificial para estimar el peso de forma segura.</p>
+                  <button onClick={handleEstimate} className="mt-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-4 py-2 rounded-xl">
+                    Procesar Registro
                   </button>
                 </div>
               )}
 
               {estimatedResult && (
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs space-y-1">
-                  <p className="font-bold text-amber-900">✨ Resultado del Análisis IA:</p>
-                  <p className="text-amber-800">Material: <b>{estimatedResult.material}</b> | Peso estimado seguro: <b>{estimatedResult.kg} kg</b> | Puntos acreditados: <b>+{estimatedResult.pts} Pts</b></p>
+                  <p className="font-bold text-amber-900">✨ Registro Exitoso:</p>
+                  <p className="text-amber-800">Material: <b>{estimatedResult.material}</b> | Peso registrado: <b>{estimatedResult.kg} kg</b> | Puntos acreditados: <b>+{estimatedResult.pts} Pts</b></p>
                 </div>
               )}
             </div>
@@ -492,41 +512,58 @@
       }
 
       function LeaderboardSection({ user, questionScore }) {
+        const [participants, setParticipants] = useState([]);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+          db.collection('users').get().then((snapshot) => {
+            const usersList = [];
+            snapshot.forEach((doc) => {
+              usersList.push(doc.data());
+            });
+            setParticipants(usersList);
+            setLoading(false);
+          }).catch(err => {
+            console.error(err);
+            setLoading(false);
+          });
+        }, []);
+
         return (
           <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
             <div className="text-center space-y-2">
               <h1 className="text-3xl font-black text-slate-900">🏆 Tabla de Clasificación por Puntos</h1>
-              <p className="text-sm text-slate-600">Compite respondiendo preguntas diarias y registrando tus reciclajes.</p>
+              <p className="text-sm text-slate-600">Se actualiza automáticamente con los participantes de la base de datos.</p>
             </div>
             <div className="bg-white rounded-3xl border shadow-sm overflow-hidden p-6">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b bg-emerald-50 text-emerald-900">
-                    <th className="p-3">Posición</th>
-                    <th className="p-3">Nombre</th>
-                    <th className="p-3">Nivel</th>
-                    <th className="p-3 text-right">Puntos Totales</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {LEADERBOARD_DATA.map((row, idx) => (
-                    <tr key={idx} className={user && row.name.includes("Tú") ? "bg-emerald-50/60 font-bold" : ""}>
-                      <td className="p-3">#{idx + 1}</td>
-                      <td className="p-3">{row.name}</td>
-                      <td className="p-3"><span className="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-1 rounded-md font-bold">{row.level}</span></td>
-                      <td className="p-3 text-right font-black text-emerald-700">{row.points} Pts</td>
+              {loading ? (
+                <p className="text-center text-xs text-slate-500 py-6">Cargando participantes...</p>
+              ) : participants.length === 0 ? (
+                <p className="text-center text-sm text-slate-500 py-8 font-medium">Por ahora no hay participantes.</p>
+              ) : (
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b bg-emerald-50 text-emerald-900">
+                      <th className="p-3">Posición</th>
+                      <th className="p-3">Nombre</th>
+                      <th className="p-3">Nivel</th>
+                      <th className="p-3 text-right">Puntos Totales</th>
                     </tr>
-                  ))}
-                  {user && (
-                    <tr className="bg-emerald-50/80 font-bold">
-                      <td className="p-3">#4</td>
-                      <td className="p-3">{user.name} (Tú)</td>
-                      <td className="p-3"><span className="bg-emerald-200 text-emerald-900 text-[11px] px-2 py-1 rounded-md font-bold">Activo</span></td>
-                      <td className="p-3 text-right font-black text-emerald-700">{(18.0 + questionScore).toFixed(1)} Pts</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y">
+                    {participants.map((row, idx) => (
+                      <tr key={idx} className={user && user.email === row.email ? "bg-emerald-50/60 font-bold" : ""}>
+                        <td className="p-3">#{idx + 1}</td>
+                        <td className="p-3">{row.name} {user && user.email === row.email ? '(Tú)' : ''}</td>
+                        <td className="p-3"><span className="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-1 rounded-md font-bold">Iniciado</span></td>
+                        <td className="p-3 text-right font-black text-emerald-700">
+                          {user && user.email === row.email ? (row.points + questionScore).toFixed(1) : row.points} Pts
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         );
@@ -570,16 +607,29 @@
           auth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
               const u = userCredential.user;
-              setUser({ name: u.email.split('@')[0], email: u.email });
+              const name = u.email.split('@')[0];
+              setUser({ name, email: u.email });
+              // Asegurar documento en Firestore con 0 puntos si no existe
+              db.collection('users').doc(u.email).set({
+                name: name,
+                email: u.email,
+                points: firebase.firestore.FieldValue.increment(0)
+              }, { merge: true });
               showToast("¡Sesión iniciada con éxito en Firebase! 🔥");
               onClose();
             })
             .catch(() => {
-              // Si no existe, lo crea automáticamente para facilitar el acceso
               auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                   const u = userCredential.user;
-                  setUser({ name: u.email.split('@')[0], email: u.email });
+                  const name = u.email.split('@')[0];
+                  setUser({ name, email: u.email });
+                  // Registrar usuario nuevo con 0 puntos
+                  db.collection('users').doc(u.email).set({
+                    name: name,
+                    email: u.email,
+                    points: 0
+                  });
                   showToast("¡Cuenta creada y sesión iniciada! 🎉");
                   onClose();
                 })

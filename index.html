@@ -11,22 +11,157 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <!-- Babel para compilar JSX en el navegador -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-emerald-50/40 text-slate-800 font-sans selection:bg-emerald-200 selection:text-emerald-900">
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState, useEffect, useMemo } = React;
-      const { 
-        Leaf, Recycle, Users, MapPin, Calendar, Clock, Heart, Bookmark, 
-        Search, Filter, ChevronRight, CheckCircle2, ArrowRight, X, Info, 
-        Share2, Award, Sparkles, BookOpen, Volume2, Compass, AlertCircle, 
-        Layers, Lightbulb, Trash2, Check, UserCheck, Send, Navigation, Star 
-      } = LucideIcons;
+      const { useState, useMemo } = React;
 
-      // --- MAIN APP COMPONENT ---
+      // --- MOCK DATA ORIGINALES COMPLETOS ---
+      const DIY_IDEAS_DATA = [
+        {
+          id: 1,
+          title: "Macetas Auto-Regables con Botellas PET",
+          category: "Plástico",
+          difficulty: "Fácil",
+          timeNeeded: "20 min",
+          likes: 142,
+          image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+          description: "Aprovecha botellas de plástico vacías para crear un sistema de autorriego ideal para menta, albahaca y suculentas.",
+          materials: ["Botella de plástico de 2L", "Cuerda de algodón o estambre", "Tierra para macetas", "Tijeras / Cúter"],
+          steps: [
+            "Corta la botella de plástico por la mitad.",
+            "Haz un pequeño orificio en la tapa de la botella y pasa la cuerda de algodón.",
+            "Coloca la parte superior de la botella boca abajo dentro de la base inferior.",
+            "Llena la base inferior con agua y la parte superior con tierra y la planta."
+          ]
+        },
+        {
+          id: 2,
+          title: "Compostero Casero en Caja de Frutas",
+          category: "Orgánico",
+          difficulty: "Intermedio",
+          timeNeeded: "45 min",
+          likes: 210,
+          image: "https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?auto=format&fit=crop&w=800&q=80",
+          description: "Aprende a transformar los desperdicios de cocina en abono rico para tus plantas usando huacales de madera.",
+          materials: ["Caja de madera o huacal", "Cartón seco perforado", "Restos verdes (cáscaras)", "Hojas secas"],
+          steps: [
+            "Forra el interior del huacal con cartón seco con pequeños orificios para ventilación.",
+            "Añade una capa base de hojas secas y ramas finas.",
+            "Agrega tus restos de cocina vegetales y cubre con otra capa de hojas secas."
+          ]
+        },
+        {
+          id: 3,
+          title: "Lámparas Colgantes con Frascos de Vidrio",
+          category: "Vidrio",
+          difficulty: "Avanzado",
+          timeNeeded: "1 hora",
+          likes: 98,
+          image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=80",
+          description: "Reutiliza frascos de conserva o mermelada para crear una iluminación cálida e industrial.",
+          materials: ["Frascos de vidrio limpios", "Cable textil con socket", "Focos LED de bajo consumo"],
+          steps: [
+            "Limpia bien los frascos de vidrio y quita el pegamento de las etiquetas.",
+            "Perfora la tapa metálica del frasco del tamaño del socket.",
+            "Instala el cableado de forma segura y enrosca el foco LED dentro del frasco."
+          ]
+        },
+        {
+          id: 4,
+          title: "Organizador de Escritorio de Cartón",
+          category: "Cartón",
+          difficulty: "Fácil",
+          timeNeeded: "30 min",
+          likes: 175,
+          image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80",
+          description: "Crea compartimentos para lápices, papeles y cables utilizando cajas de cereal o envases rígidos.",
+          materials: ["Cajas de cereal limpias", "Papel kraft o pinturas de agua", "Pegamento"],
+          steps: [
+            "Corta las cajas de cereal en diagonal a diferentes alturas.",
+            "Une las cajas con pegamento para formar una estructura con varios pisos.",
+            "Decora el exterior con pinturas o papel kraft reciclado."
+          ]
+        },
+        {
+          id: 5,
+          title: "Hotel de Insectos y Polinizadores",
+          category: "Jardín",
+          difficulty: "Intermedio",
+          timeNeeded: "50 min",
+          likes: 310,
+          image: "https://images.unsplash.com/photo-1592417817098-8f3d6eb1b7a5?auto=format&fit=crop&w=800&q=80",
+          description: "Refugio para abejas solitarias y mariquitas usando piñas de pino, cañas y trozos de madera.",
+          materials: ["Caja de madera sin tratar", "Cañas de bambú huecas", "Piñas de pino secas"],
+          steps: [
+            "Agrupa las cañas de bambú y las piñas bien apretadas dentro de la caja.",
+            "Sujeta el frente con malla metálica para evitar que caigan los materiales.",
+            "Coloca el hotel en un lugar protegido de la lluvia en tu jardín."
+          ]
+        }
+      ];
+
+      const CLEANUP_EVENTS_DATA = [
+        {
+          id: 1,
+          title: "Limpieza Comunitaria del Río & Ribera",
+          type: "Jornada de Limpieza",
+          date: "Sábado 15 de Nov",
+          time: "09:00 AM - 12:00 PM",
+          location: "Parque Lineal de la Ribera",
+          volunteersCount: 38,
+          description: "Retiro de plásticos, bolsas y botellas acumuladas en el cauce del río. Incluye hidratación y kits."
+        },
+        {
+          id: 2,
+          title: "Reforestación y Pintura de Bancas",
+          type: "Restauración Verde",
+          date: "Domingo 23 de Nov",
+          time: "10:00 AM - 01:30 PM",
+          location: "Plaza de la Comunidad Norte",
+          volunteersCount: 25,
+          description: "Siembra de 30 árboles nativos y restauración de espacios de juego infantiles."
+        },
+        {
+          id: 3,
+          title: "Taller Abierto de Compostaje en Parque",
+          type: "Taller Comunitario",
+          date: "Sábado 29 de Nov",
+          time: "11:00 AM - 01:00 PM",
+          location: "Vivero Municipal Central",
+          volunteersCount: 19,
+          description: "Aprende de manera práctica a iniciar tu compostera casera con restos de comida."
+        }
+      ];
+
+      const CONFERENCES_DATA = [
+        {
+          id: 1,
+          title: "Economía Circular: De Residuo a Recurso en la Ciudad",
+          speaker: "Dra. Elena Rostova",
+          speakerRole: "Especialista en Gestión Ambiental",
+          speakerAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
+          date: "Jueves 12 de Noviembre",
+          time: "06:00 PM - 07:30 PM",
+          mode: "Presencial & Streaming",
+          description: "Estrategias prácticas para reducir desperdicios a escala familiar y pequeños comercios locales."
+        },
+        {
+          id: 2,
+          title: "El Impacto de los Microplásticos en Nuestro Entorno",
+          speaker: "Ing. Carlos Mendoza",
+          speakerRole: "Fundador de Ecología Activa",
+          speakerAvatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80",
+          date: "Martes 18 de Noviembre",
+          time: "05:00 PM - 06:30 PM",
+          mode: "Online (Zoom)",
+          description: "Análisis del ciclo de vida del plástico y cómo sustituirlo efectivamente en el consumo diario."
+        }
+      ];
+
+      // --- COMPONENTE PRINCIPAL ---
       function App() {
         const [activeTab, setActiveTab] = useState('home');
         const [savedIdeas, setSavedIdeas] = useState([1, 3]);
@@ -47,58 +182,39 @@
           <div className="min-h-screen bg-emerald-50/40 text-slate-800 font-sans flex flex-col">
             {notification && (
               <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-emerald-500/30">
-                <Sparkles className="w-5 h-5 text-emerald-400" />
+                <span>✨</span>
                 <span className="text-sm font-medium">{notification}</span>
               </div>
             )}
 
-            <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+            <Header activeTab="{activeTab}" setActiveTab="{setActiveTab}"/>
 
             <main className="flex-1">
               {activeTab === 'home' && (
-                <HomeSection 
-                  setActiveTab={setActiveTab} 
-                  setSelectedIdea={setSelectedIdea}
-                  setSelectedEvent={setSelectedEvent}
-                />
+                <HomeSection setActiveTab="{setActiveTab}" setSelectedIdea="{setSelectedIdea}"/>
               )}
 
               {activeTab === 'ideas' && (
-                <DIYIdeasSection 
-                  savedIdeas={savedIdeas}
-                  setSavedIdeas={setSavedIdeas}
-                  likedIdeas={likedIdeas}
-                  setLikedIdeas={setLikedIdeas}
-                  setSelectedIdea={setSelectedIdea}
-                  showToast={showToast}
-                />
+                <DIYIdeasSection likedIdeas="{likedIdeas}" savedIdeas="{savedIdeas}" setLikedIdeas="{setLikedIdeas}" setSavedIdeas="{setSavedIdeas}" setSelectedIdea="{setSelectedIdea}" showToast="{showToast}"/>
               )}
 
               {activeTab === 'mapa' && (
-                <LocalActivitiesSection 
-                  setSelectedEvent={setSelectedEvent}
-                  setVolunteerModalOpen={setVolunteerModalOpen}
-                />
+                <LocalActivitiesSection setSelectedEvent="{setSelectedEvent}" setVolunteerModalOpen="{setVolunteerModalOpen}"/>
               )}
 
               {activeTab === 'conferencias' && (
-                <ConferencesSection 
-                  setSelectedConference={setSelectedConference}
-                  setRsvpModalOpen={setRsvpModalOpen}
-                />
+                <ConferencesSection setRsvpModalOpen="{setRsvpModalOpen}" setSelectedConference="{setSelectedConference}"/>
               )}
 
               {activeTab === 'guia' && (
-                <RecyclingGuideSection />
+                <RecyclingGuideSection/>
               )}
             </main>
 
-            <Footer setActiveTab={setActiveTab} />
+            <Footer setActiveTab="{setActiveTab}"/>
 
             {selectedIdea && (
-              <DIYDetailModal 
-                idea={selectedIdea} 
-                onClose={() => setSelectedIdea(null)}
+              <DIYDetailModal idea="{selectedIdea}" onClose="{()"> setSelectedIdea(null)}
                 isSaved={savedIdeas.includes(selectedIdea.id)}
                 toggleSave={() => {
                   if (savedIdeas.includes(selectedIdea.id)) {
@@ -113,17 +229,13 @@
             )}
 
             {volunteerModalOpen && selectedEvent && (
-              <VolunteerModal 
-                event={selectedEvent} 
-                onClose={() => setVolunteerModalOpen(false)}
+              <VolunteerModal event="{selectedEvent}" onClose="{()"> setVolunteerModalOpen(false)}
                 showToast={showToast}
               />
             )}
 
             {rsvpModalOpen && selectedConference && (
-              <RSVPModal 
-                conference={selectedConference}
-                onClose={() => setRsvpModalOpen(false)}
+              <RSVPModal conference="{selectedConference}" onClose="{()"> setRsvpModalOpen(false)}
                 showToast={showToast}
               />
             )}
@@ -131,263 +243,143 @@
         );
       }
 
-      // --- LOGO COMPONENT ---
-      function EcoHuellaLogo({ textVisible = true }) {
-        return (
-          <div className="flex items-center gap-3 cursor-pointer select-none group">
-            <div className="relative w-11 h-11 flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-sm group-hover:scale-105 transition-transform duration-300">
-                <defs>
-                  <linearGradient id="mintGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#a7f3d0" />
-                    <stop offset="100%" stopColor="#34d399" />
-                  </linearGradient>
-                  <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#67e8f9" />
-                    <stop offset="100%" stopColor="#06b6d4" />
-                  </linearGradient>
-                  <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#4ade80" />
-                    <stop offset="100%" stopColor="#059669" />
-                  </linearGradient>
-                </defs>
-                <path d="M 60 65 C 80 35 120 35 140 65 L 148 55 C 130 25 70 25 52 55 Z" fill="url(#mintGrad)" />
-                <path d="M 125 55 Q 145 65 155 75 Q 140 80 130 70 Z" fill="#34d399" />
-                <path d="M 148 78 C 170 110 150 145 120 165 L 128 175 C 165 150 185 105 158 68 Z" fill="url(#greenGrad)" />
-                <path d="M 132 150 Q 122 170 115 180 Q 110 162 122 152 Z" fill="#059669" />
-                <path d="M 108 170 C 70 165 45 130 50 90 L 38 88 C 32 138 65 178 112 182 Z" fill="url(#tealGrad)" />
-                <path d="M 50 102 Q 40 85 35 75 Q 52 75 58 88 Z" fill="#0891b2" />
-                <path d="M 85 42 C 95 38 110 46 115 55 C 102 55 92 48 85 42 Z" fill="#86efac" opacity="0.9" />
-                <path d="M 152 95 C 162 108 155 125 145 130 C 142 118 148 105 152 95 Z" fill="#4ade80" opacity="0.9" />
-                <path d="M 52 135 C 45 122 55 108 65 105 C 65 118 58 130 52 135 Z" fill="#22d3ee" opacity="0.9" />
-                <path d="M 72 48 C 65 52 60 62 68 70 C 75 62 78 52 72 48 Z" fill="#4ade80" />
-                <circle cx="100" cy="108" r="28" fill="none" stroke="#2dd4bf" strokeWidth="4" strokeDasharray="140" opacity="0.8" />
-                <path d="M 100 126 C 88 126 84 112 88 100 C 98 94 112 100 112 112 C 112 122 106 126 100 126 Z" fill="url(#greenGrad)" />
-                <path d="M 94 122 Q 100 108 106 102" fill="none" stroke="#f0fdf4" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-            </div>
-
-            {textVisible && (
-              <div className="flex flex-col leading-none">
-                <span className="text-2xl font-extrabold tracking-tight text-teal-800 font-sans">
-                  eco<span className="text-teal-600 font-normal">huella</span>
-                </span>
-                <span className="text-[10.5px] font-medium tracking-normal text-teal-700/80 mt-1 italic">
-                  dejando huella por el futuro
-                </span>
-              </div>
-            )}
-          </div>
-        );
-      }
-
-      // --- HEADER ---
       function Header({ activeTab, setActiveTab }) {
-        const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
         const navItems = [
-          { id: 'home', label: 'Inicio', icon: Leaf },
-          { id: 'ideas', label: 'Proyectos DIY', icon: Lightbulb },
-          { id: 'mapa', label: 'Actividades Cerca', icon: MapPin },
-          { id: 'conferencias', label: 'Conferencias & Talleres', icon: Calendar },
-          { id: 'guia', label: 'Guía de Reciclaje', icon: BookOpen },
+          { id: 'home', label: 'Inicio', emoji: '🌱' },
+          { id: 'ideas', label: 'Proyectos DIY', emoji: '💡' },
+          { id: 'mapa', label: 'Actividades Cerca', emoji: '📍' },
+          { id: 'conferencias', label: 'Conferencias & Talleres', emoji: '📅' },
+          { id: 'guia', label: 'Guía de Reciclaje', emoji: '📖' },
         ];
 
         return (
           <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-emerald-100 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between h-20">
-                <div onClick={() => setActiveTab('home')}><EcoHuellaLogo /></div>
-                <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-                  {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = activeTab === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                          isActive ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/80'
-                        }`}
-                      >
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-emerald-600'}`} />
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </nav>
-                <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => setActiveTab('mapa')}
-                    className="hidden lg:flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-md"
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+              <div onClick={() => setActiveTab('home')} className="flex items-center gap-2 cursor-pointer font-extrabold text-2xl text-teal-800">
+                <span>🌱 ecohuella</span>
+              </div>
+              <nav className="hidden md:flex items-center gap-2">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      activeTab === item.id ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50'
+                    }`}
                   >
-                    <Users className="w-4 h-4" />
-                    <span>Sumarme Hoy</span>
+                    <span>{item.emoji}</span>
+                    {item.label}
                   </button>
-                  <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100">
-                    <Layers className="w-6 h-6 text-emerald-700" />
-                  </button>
-                </div>
-              </div>
+                ))}
+              </nav>
             </div>
-            {mobileMenuOpen && (
-              <div className="md:hidden bg-white border-b border-emerald-100 px-4 pt-2 pb-6 space-y-2">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold ${isActive ? 'bg-emerald-600 text-white' : 'text-slate-700 hover:bg-emerald-50'}`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </header>
         );
       }
 
-      // --- HOME SECTION ---
       function HomeSection({ setActiveTab, setSelectedIdea }) {
         return (
           <div className="space-y-16 pb-16">
             <section className="relative overflow-hidden bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 text-white pt-16 pb-24 px-4 sm:px-6 lg:px-8">
               <div className="relative max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 items-center">
                 <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-bold uppercase backdrop-blur-md">
-                    <Sparkles className="w-4 h-4 text-amber-300" />
-                    <span>Iniciativa Ciudadana Unida</span>
-                  </div>
+                  <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-bold uppercase">
+                    ✨ Iniciativa Ciudadana Unida
+                  </span>
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-none">
                     Transforma tu ciudad <br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-amber-200">
                       dejando huella por el futuro
                     </span>
                   </h1>
-                  <p className="text-emerald-100 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
-                    Aprende a reciclar en casa, descubre proyectos creativos con materiales reutilizados y súmate a las jornadas locales de limpieza y reforestación en nuestros barrios.
+                  <p className="text-emerald-100 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0">
+                    Aprende a reciclar en casa, descubre proyectos creativos con materiales reutilizados y súmate a las jornadas locales de limpieza y reforestación.
                   </p>
-                  <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                     <button
                       onClick={() => setActiveTab('mapa')}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold px-7 py-3.5 rounded-2xl shadow-lg transition-all"
+                      className="bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold px-7 py-3.5 rounded-2xl shadow-lg transition"
                     >
-                      <MapPin className="w-5 h-5" />
-                      <span>Ver actividades cerca de mí</span>
+                      📍 Ver actividades cerca de mí
                     </button>
                     <button
                       onClick={() => setActiveTab('ideas')}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-6 py-3.5 rounded-2xl backdrop-blur-md transition-all"
+                      className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-6 py-3.5 rounded-2xl transition"
                     >
-                      <Lightbulb className="w-5 h-5 text-amber-300" />
-                      <span>Explorar Ideas DIY</span>
+                      💡 Explorar Ideas DIY
                     </button>
-                  </div>
-                </div>
-                <div className="lg:col-span-5 flex justify-center">
-                  <div className="relative w-full max-w-md bg-white/10 border border-white/20 rounded-3xl p-6 backdrop-blur-xl shadow-2xl text-slate-800">
-                    <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 flex flex-col items-center text-center space-y-4">
-                      <div className="w-24 h-24 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg p-3">
-                        <EcoHuellaLogo textVisible={false} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-slate-800">Miembro EcoHuella</h3>
-                        <p className="text-xs text-emerald-700 font-medium">Comunidad Sustentable Local</p>
-                      </div>
-                      <div className="flex gap-2 w-full">
-                        <button onClick={() => setActiveTab('guia')} className="flex-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold py-2 px-3 rounded-xl text-xs transition">Separar Basura</button>
-                        <button onClick={() => setActiveTab('mapa')} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-xl text-xs transition">Participar</button>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
             </section>
-            <QuickSortingWidget />
+            
+            <QuickSortingWidget/>
+
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-end mb-8">
+                <div>
+                  <span className="text-xs font-bold text-emerald-700 uppercase">Inspiración Diaria</span>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Proyectos Populares DIY</h2>
+                </div>
+                <button onClick={() => setActiveTab('ideas')} className="text-sm font-bold text-emerald-700 hover:underline">Ver todos →</button>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {DIY_IDEAS_DATA.slice(0, 3).map(idea => (
+                  <div key={idea.id} onClick={() => setSelectedIdea(idea)} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition">
+                    <img src={idea.image} alt={idea.title} className="w-full h-48 object-cover" />
+                    <div className="p-5 space-y-2">
+                      <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-md">{idea.category}</span>
+                      <h3 className="font-bold text-lg text-slate-800">{idea.title}</h3>
+                      <p className="text-xs text-slate-600 line-clamp-2">{idea.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
         );
       }
 
-      // --- MOCK DATA & COMPONENTS (DIY, Map, Guide, Footer) ---
-      const DIY_IDEAS_DATA = [
-        {
-          id: 1,
-          title: "Macetas Auto-Regables con Botellas PET",
-          category: "Plástico",
-          difficulty: "Fácil",
-          timeNeeded: "20 min",
-          likes: 142,
-          image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
-          description: "Aprovecha botellas de plástico vacías para crear un sistema de autorriego ideal para menta, albahaca y suculentas.",
-          materials: ["Botella de plástico de 2L", "Cuerda de algodón", "Tierra para macetas", "Tijeras"],
-          steps: ["Corta la botella por la mitad.", "Pasa la cuerda por la tapa.", "Coloca la parte superior boca abajo.", "Añade agua y tierra."]
-        },
-        {
-          id: 2,
-          title: "Compostero Casero en Caja de Frutas",
-          category: "Orgánico",
-          difficulty: "Intermedio",
-          timeNeeded: "45 min",
-          likes: 210,
-          image: "https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?auto=format&fit=crop&w=800&q=80",
-          description: "Transforma desperdicios de cocina en abono usando huacales de madera.",
-          materials: ["Huacal de madera", "Cartón seco", "Restos orgánicos"],
-          steps: ["Forra el huacal.", "Añade capas de restos y hojas secas.", "Mantén humedad."]
-        }
-      ];
-
-      const CLEANUP_EVENTS_DATA = [
-        {
-          id: 1,
-          title: "Limpieza Comunitaria del Río & Ribera",
-          type: "Jornada de Limpieza",
-          date: "Sábado 15 de Nov",
-          time: "09:00 AM",
-          location: "Parque Lineal de la Ribera",
-          volunteersCount: 38,
-          mapX: 42,
-          mapY: 35,
-          description: "Retiro de plásticos y botellas en el cauce del río."
-        }
-      ];
-
-      const CONFERENCES_DATA = [
-        {
-          id: 1,
-          title: "Economía Circular en la Ciudad",
-          speaker: "Dra. Elena Rostova",
-          speakerRole: "Especialista Ambiental",
-          speakerAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
-          date: "Jueves 12 de Nov",
-          time: "06:00 PM",
-          mode: "Presencial & Streaming",
-          description: "Estrategias prácticas para reducir desperdicios."
-        }
-      ];
-
       function DIYIdeasSection({ savedIdeas, setSavedIdeas, likedIdeas, setLikedIdeas, setSelectedIdea, showToast }) {
+        const [activeCategory, setActiveCategory] = useState('Todos');
+        const categories = ['Todos', 'Plástico', 'Orgánico', 'Vidrio', 'Cartón', 'Jardín'];
+
+        const filteredIdeas = useMemo(() => {
+          if (activeCategory === 'Todos') return DIY_IDEAS_DATA;
+          return DIY_IDEAS_DATA.filter(i => i.category === activeCategory);
+        }, [activeCategory]);
+
         return (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-            <div className="bg-emerald-800 text-white p-8 rounded-3xl shadow-lg">
-              <h1 className="text-3xl font-black">Proyectos DIY con Reciclaje</h1>
-              <p className="text-emerald-100 mt-2">Transforma tus residuos en objetos útiles.</p>
+            <div className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white p-8 rounded-3xl shadow-lg">
+              <h1 className="text-3xl sm:text-4xl font-black">Proyectos DIY con Reciclaje</h1>
+              <p className="text-emerald-100 mt-2 text-sm">Transforma los residuos de tu hogar en objetos útiles y decoración.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition ${activeCategory === cat ? 'bg-emerald-600 text-white shadow' : 'bg-white text-slate-600 border'}`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {DIY_IDEAS_DATA.map(idea => (
-                <div key={idea.id} className="bg-white rounded-2xl border shadow-sm overflow-hidden flex flex-col">
-                  <img src={idea.image} alt={idea.title} className="h-48 w-full object-cover" />
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
+              {filteredIdeas.map(idea => (
+                <div key={idea.id} onClick={() => setSelectedIdea(idea)} className="bg-white rounded-2xl border shadow-sm overflow-hidden cursor-pointer hover:shadow-xl transition flex flex-col justify-between">
+                  <div>
+                    <img src={idea.image} alt={idea.title} className="w-full h-48 object-cover" />
+                    <div className="p-5 space-y-2">
+                      <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-md">{idea.category}</span>
                       <h3 className="font-bold text-lg text-slate-800">{idea.title}</h3>
-                      <p className="text-xs text-slate-600 mt-1">{idea.description}</p>
+                      <p className="text-xs text-slate-600 line-clamp-2">{idea.description}</p>
                     </div>
-                    <button onClick={() => setSelectedIdea(idea)} className="mt-4 text-emerald-700 font-bold text-xs flex items-center gap-1">
-                      Ver Instrucciones <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                  </div>
+                  <div className="p-5 pt-0 flex justify-between items-center text-xs text-emerald-700 font-bold">
+                    <span>⏱ {idea.timeNeeded}</span>
+                    <span>Ver Paso a Paso →</span>
                   </div>
                 </div>
               ))}
@@ -399,17 +391,25 @@
       function LocalActivitiesSection({ setSelectedEvent, setVolunteerModalOpen }) {
         return (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-            <h1 className="text-3xl font-black text-slate-900">Actividades Cerca de Mí</h1>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-emerald-700 uppercase">Participación Ciudadana</span>
+              <h1 className="text-3xl font-black text-slate-900">Actividades Cerca de Mí</h1>
+              <p className="text-sm text-slate-600">Únete a jornadas voluntarias de limpieza, restauración y siembra.</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
               {CLEANUP_EVENTS_DATA.map(ev => (
-                <div key={ev.id} className="bg-white p-6 rounded-2xl border shadow-sm space-y-3">
-                  <h3 className="text-lg font-bold text-slate-800">{ev.title}</h3>
-                  <p className="text-xs text-slate-600">{ev.description}</p>
+                <div key={ev.id} className="bg-white p-6 rounded-2xl border shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <span className="bg-amber-100 text-amber-800 text-[11px] font-bold px-2.5 py-1 rounded-md">{ev.type}</span>
+                    <h3 className="text-lg font-bold text-slate-800">{ev.title}</h3>
+                    <p className="text-xs text-slate-600">📍 {ev.location}</p>
+                    <p className="text-xs text-slate-500">{ev.description}</p>
+                  </div>
                   <button 
                     onClick={() => { setSelectedEvent(ev); setVolunteerModalOpen(true); }}
-                    className="bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition shadow"
                   >
-                    Unirme
+                    Unirme a esta jornada
                   </button>
                 </div>
               ))}
@@ -421,17 +421,31 @@
       function ConferencesSection({ setSelectedConference, setRsvpModalOpen }) {
         return (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-            <h1 className="text-3xl font-black text-slate-900">Conferencias & Talleres</h1>
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-emerald-700 uppercase">Educación Ambiental</span>
+              <h1 className="text-3xl font-black text-slate-900">Conferencias & Talleres</h1>
+              <p className="text-sm text-slate-600">Aprende de expertos en modalidad presencial y streaming.</p>
+            </div>
             <div className="grid md:grid-cols-2 gap-6">
               {CONFERENCES_DATA.map(conf => (
-                <div key={conf.id} className="bg-white p-6 rounded-2xl border shadow-sm space-y-3">
-                  <h3 className="text-lg font-bold text-slate-800">{conf.title}</h3>
-                  <p className="text-xs text-slate-600">{conf.description}</p>
+                <div key={conf.id} className="bg-white p-6 rounded-2xl border shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <span className="bg-blue-100 text-blue-800 text-[11px] font-bold px-2.5 py-1 rounded-md">{conf.mode}</span>
+                    <h3 className="text-lg font-bold text-slate-800">{conf.title}</h3>
+                    <p className="text-xs text-slate-600">{conf.description}</p>
+                    <div className="flex items-center gap-3 pt-2 border-t">
+                      <img src={conf.speakerAvatar} alt={conf.speaker} className="w-10 h-10 rounded-full object-cover" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">{conf.speaker}</p>
+                        <p className="text-[10px] text-slate-500">{conf.speakerRole}</p>
+                      </div>
+                    </div>
+                  </div>
                   <button 
                     onClick={() => { setSelectedConference(conf); setRsvpModalOpen(true); }}
-                    className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl transition"
                   >
-                    Reservar Cupo
+                    Reservar Cupo Gratuito
                   </button>
                 </div>
               ))}
@@ -441,45 +455,138 @@
       }
 
       function RecyclingGuideSection() {
-        return (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 text-center">
-            <h1 className="text-3xl font-black text-slate-900">Guía de Reciclaje</h1>
-            <p className="text-slate-600">Aprende a separar correctamente tus residuos en casa.</p>
-          </div>
-        );
-      }
+        const [activeBin, setActiveBin] = useState('organico');
+        const bins = {
+          organico: { title: 'Orgánico (Marrón)', accepts: ['Restos de verduras', 'Cáscaras de huevo', 'Posos de café'], rejects: ['Plásticos', 'Pañales'], tip: 'Ideal para compostaje casero.' },
+          inorganico: { title: 'Plásticos y Envases', accepts: ['Botellas PET', 'Latas de aluminio', 'Bolsas limpias'], rejects: ['Juguetes rotos', 'Grasa'], tip: 'Lava y aplasta tus botellas.' },
+          papel: { title: 'Papel y Cartón', accepts: ['Cajas de cartón', 'Periódicos', 'Revistas'], rejects: ['Cajas con grasa', 'Papel plastificado'], tip: 'Desarma las cajas para ahorrar espacio.' },
+          vidrio: { title: 'Vidrio', accepts: ['Frascos de mermelada', 'Botellas de vidrio'], rejects: ['Espejos', 'Focos'], tip: 'Quita las tapas de metal.' }
+        };
+        const current = bins[activeBin];
 
-      function QuickSortingWidget() {
         return (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-gradient-to-r from-emerald-900 to-teal-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="text-xs font-bold text-emerald-700 uppercase">Aprende a Separar</span>
+              <h1 className="text-3xl font-black text-slate-900">Guía Práctica de Clasificación</h1>
+              <p className="text-sm text-slate-600">Haz clic en cada contenedor para conocer los detalles.</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {Object.keys(bins).map(key => (
+                <button
+                  key={key}
+                  onClick={() => setActiveBin(key)}
+                  className={`p-4 rounded-2xl border text-left font-bold text-sm transition ${activeBin === key ? 'bg-emerald-600 text-white shadow-lg' : 'bg-white text-slate-800'}`}
+                >
+                  ♻️ {bins[key].title}
+                </button>
+              ))}
+            </div>
+            <div className="bg-white rounded-3xl border p-6 sm:p-8 shadow-sm grid md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-2xl font-black">Mini-Reto EcoHuella</h3>
-                <p className="text-xs text-emerald-100">Pon a prueba tus conocimientos de reciclaje diario.</p>
+                <h3 className="font-bold text-lg text-slate-900 mb-3">✅ Sí se recicla aquí:</h3>
+                <ul className="space-y-2 text-sm text-slate-700">
+                  {current.accepts.map((item, idx) => <li key={idx} className="bg-emerald-50 p-2 rounded-lg border border-emerald-100">• {item}</li>)}
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-bold text-lg text-rose-800 mb-3">❌ NO depositar aquí:</h3>
+                  <ul className="space-y-2 text-sm text-slate-700">
+                    {current.rejects.map((item, idx) => <li key={idx} className="bg-rose-50 p-2 rounded-lg border border-rose-100">• {item}</li>)}
+                  </ul>
+                </div>
+                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-xs text-amber-900">
+                  <p className="font-bold">💡 Consejo EcoHuella:</p>
+                  <p className="mt-1">{current.tip}</p>
+                </div>
               </div>
             </div>
           </div>
         );
       }
 
-      function DIYDetailModal({ idea, onClose }) {
+      function QuickSortingWidget() {
+        const [score, setScore] = useState(0);
+        const [msg, setMsg] = useState(null);
+
+        const checkItem = (correct) => {
+          if(correct) {
+            setScore(score + 10);
+            setMsg('¡Correcto! +10 Puntos 🎉');
+          } else {
+            setMsg('¡Casi! Inténtalo de nuevo ❌');
+          }
+          setTimeout(() => setMsg(null), 1500);
+        };
+
+        return (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-gradient-to-r from-emerald-900 to-teal-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="space-y-2">
+                <span className="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full uppercase border border-emerald-400/30">Mini-Reto</span>
+                <h3 className="text-2xl font-black">¿Dónde va la Botella de Plástico?</h3>
+                <p className="text-xs text-emerald-100">Pon a prueba tus conocimientos diarios.</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 text-center space-y-3 w-full md:w-72">
+                {msg ? (
+                  <div className="p-3 bg-white text-slate-900 font-bold rounded-xl text-sm">{msg}</div>
+                ) : (
+                  <>
+                    <div className="bg-white text-slate-900 font-bold p-2.5 rounded-xl text-xs">Botella de Agua (PET)</div>
+                    <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+                      <button onClick={() => checkItem(false)} className="bg-amber-700/80 p-2 rounded-lg hover:bg-amber-700">Orgánico</button>
+                      <button onClick={() => checkItem(true)} className="bg-emerald-600/80 p-2 rounded-lg hover:bg-emerald-600">Plástico</button>
+                    </div>
+                  </>
+                )}
+                <div className="text-[11px] text-emerald-300 font-semibold">Puntaje: {score} Pts</div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function DIYDetailModal({ idea, onClose, isSaved, toggleSave }) {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4">
-              <h3 className="text-xl font-bold">{idea.title}</h3>
-              <p className="text-sm text-slate-600">{idea.description}</p>
-              <button onClick={onClose} className="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold">Cerrar</button>
+            <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-6 relative">
+              <button onClick={onClose} className="absolute top-4 right-4 bg-slate-100 p-2 rounded-full font-bold">✕</button>
+              <img src={idea.image} alt={idea.title} className="w-full h-52 object-cover rounded-2xl" />
+              <div className="space-y-2">
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-md">{idea.category}</span>
+                <h2 className="text-2xl font-black text-slate-900">{idea.title}</h2>
+                <p className="text-sm text-slate-600">{idea.description}</p>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-bold text-slate-900">🛠 Materiales:</h3>
+                <ul className="grid sm:grid-cols-2 gap-2 text-xs text-slate-700">
+                  {idea.materials.map((m, i) => <li key={i} className="bg-emerald-50 p-2 rounded-lg">• {m}</li>)}
+                </ul>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-bold text-slate-900">📝 Instrucciones:</h3>
+                <ol className="space-y-2 text-xs text-slate-700">
+                  {idea.steps.map((s, i) => <li key={i} className="bg-slate-50 p-2.5 rounded-lg border"><strong>Paso {i+1}:</strong> {s}</li>)}
+                </ol>
+              </div>
             </div>
           </div>
         );
       }
 
       function VolunteerModal({ event, onClose, showToast }) {
+        const [name, setName] = useState('');
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4">
-              <h3 className="text-xl font-bold">Unirse a: {event.title}</h3>
-              <button onClick={() => { showToast("¡Registrado con éxito!"); onClose(); }} className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold w-full">Confirmar</button>
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative">
+              <button onClick={onClose} className="absolute top-4 right-4 font-bold">✕</button>
+              <h3 className="text-xl font-bold text-slate-900">Unirse a: {event.title}</h3>
+              <p className="text-xs text-slate-600">📍 {event.location} • {event.date}</p>
+              <form onSubmit={(e) => { e.preventDefault(); showToast(`¡Gracias ${name}! Registro exitoso.`); onClose(); }} className="space-y-3">
+                <input type="text" required placeholder="Tu Nombre Completo" value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs" />
+                <button type="submit" className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs">Confirmar Asistencia</button>
+              </form>
             </div>
           </div>
         );
@@ -488,9 +595,11 @@
       function RSVPModal({ conference, onClose, showToast }) {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4">
-              <h3 className="text-xl font-bold">Reservar: {conference.title}</h3>
-              <button onClick={() => { showToast("¡Reserva confirmada!"); onClose(); }} className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold w-full">Confirmar Pase</button>
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative">
+              <button onClick={onClose} className="absolute top-4 right-4 font-bold">✕</button>
+              <h3 className="text-xl font-bold text-slate-900">Reservar: {conference.title}</h3>
+              <p className="text-xs text-slate-600">Impartido por {conference.speaker}</p>
+              <button onClick={() => { showToast("¡Pase reservado con éxito!"); onClose(); }} className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs">Confirmar Pase Gratuito</button>
             </div>
           </div>
         );
@@ -499,12 +608,12 @@
       function Footer() {
         return (
           <footer className="bg-slate-900 text-white border-t border-slate-800 pt-8 pb-8 text-center text-xs text-slate-400">
-            © EcoHuella - Todos los derechos reservados.
+            © {new Date().getFullYear()} EcoHuella - Dejando huella por el futuro. Todos los derechos reservados.
           </footer>
         );
       }
 
-      ReactDOM.render(<App />, document.getElementById('root'));
+      ReactDOM.render(<App/>, document.getElementById('root'));
     </script>
 </body>
 </html>

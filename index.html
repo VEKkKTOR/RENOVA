@@ -28,15 +28,15 @@
     <script type="text/babel">
       const { useState, useEffect } = React;
 
-      // ── CONFIGURACIÓN REAL DE FIREBASE (PROYECTO: renova-fa094) ──
+      // ── NUEVA CONFIGURACIÓN DE FIREBASE ──
       const firebaseConfig = {
         apiKey: "AIzaSyDl5hNXtDeyXY0noD4ojZyfXLqy3FtgJvU",
         authDomain: "renova-fa094.firebaseapp.com",
         projectId: "renova-fa094",
         storageBucket: "renova-fa094.firebasestorage.app",
         messagingSenderId: "499428277533",
-        appId: "1:499428277533:web:33439931d728a3800b35f4",
-        measurementId: "G-9R45E8ZX7D"
+        appId: "1:499428277533:web:b60e50a61ac2da510b35f4",
+        measurementId: "G-Z09KNFMHVL"
       };
 
       // Inicializar Firebase
@@ -315,7 +315,7 @@
               </div>
             </section>
 
-            {/* SECCIÓN DE REDES SOCIALES Y CONTACTO (INSTAGRAM, FACEBOOK, GMAIL) */}
+            {/* SECCIÓN DE REDES SOCIALES Y CONTACTO */}
             <section className="max-w-4xl mx-auto px-4">
               <div className="bg-white rounded-3xl border p-8 shadow-sm text-center space-y-4">
                 <h3 className="text-xl font-bold text-slate-900">Conéctate con Nosotros</h3>
@@ -609,7 +609,6 @@
               const u = userCredential.user;
               const name = u.email.split('@')[0];
               setUser({ name, email: u.email });
-              // Asegurar documento en Firestore con 0 puntos si no existe
               db.collection('users').doc(u.email).set({
                 name: name,
                 email: u.email,
@@ -624,7 +623,6 @@
                   const u = userCredential.user;
                   const name = u.email.split('@')[0];
                   setUser({ name, email: u.email });
-                  // Registrar usuario nuevo con 0 puntos
                   db.collection('users').doc(u.email).set({
                     name: name,
                     email: u.email,

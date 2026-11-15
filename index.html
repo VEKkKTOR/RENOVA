@@ -28,7 +28,7 @@
     <script type="text/babel">
       const { useState, useEffect } = React;
 
-      // ── NUEVA CONFIGURACIÓN DE FIREBASE ──
+      // ── CONFIGURACIÓN DE FIREBASE ──
       const firebaseConfig = {
         apiKey: "AIzaSyDl5hNXtDeyXY0noD4ojZyfXLqy3FtgJvU",
         authDomain: "renova-fa094.firebaseapp.com",
@@ -406,7 +406,7 @@
                 <div className="p-4 bg-teal-50 rounded-2xl border border-teal-200 space-y-3">
                   <label className="text-xs font-bold text-teal-900 block">Sube foto de tu cartón o latas:</label>
                   <input type="file" className="text-xs" />
-                  <p className="text-[10px] text-slate-500 italic">* Esta imagen será analizada mediante Inteligencia Artificial para estimar el peso de forma segura.</p>
+                  <p className="text-[10px] text-slate-500 italic">* Esta imagen será analizada mediante análisis conservador para estimar el peso de forma segura.</p>
                   <button onClick={handleEstimate} className="mt-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-4 py-2 rounded-xl">
                     Procesar Registro
                   </button>
@@ -473,7 +473,7 @@
                           <td className="p-3 font-medium">Plástico (PET)</td>
                           <td className="p-3">{calcState.plasticKg} kg</td>
                           <td className="p-3 font-bold text-emerald-700">{(calcState.plasticKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                          <td className="p-3 font-bold text-amber-700">+{(calcState.plasticKg * (calcState.goal/100) * 12).toFixed(0)} Pts</td>
+                          <td className="p-3 font-bold text-amber-700">+{(calcState.plasticKg * (calcState.goal/100) * 1.5).toFixed(1)} Pts</td>
                         </tr>
                         <tr>
                           <td className="p-3 font-medium">Papel y Cartón</td>
@@ -485,7 +485,7 @@
                           <td className="p-3 font-medium">Vidrio</td>
                           <td className="p-3">{calcState.glassKg} kg</td>
                           <td className="p-3 font-bold text-emerald-700">{(calcState.glassKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                          <td className="p-3 font-bold text-amber-700">+{(calcState.glassKg * (calcState.goal/100) * 12).toFixed(0)} Pts</td>
+                          <td className="p-3 font-bold text-amber-700">+{(calcState.glassKg * (calcState.goal/100) * 2).toFixed(0)} Pts</td>
                         </tr>
                         <tr>
                           <td className="p-3 font-medium">Metales</td>
@@ -533,13 +533,13 @@
           <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
             <div className="text-center space-y-2">
               <h1 className="text-3xl font-black text-slate-900">🏆 Tabla de Clasificación por Puntos</h1>
-              <p className="text-sm text-slate-600">Se actualiza automáticamente con los participantes de la base de datos.</p>
+              <p className="text-sm text-slate-600">Se actualiza automáticamente con los participantes de la base de datos en tiempo real.</p>
             </div>
             <div className="bg-white rounded-3xl border shadow-sm overflow-hidden p-6">
               {loading ? (
                 <p className="text-center text-xs text-slate-500 py-6">Cargando participantes...</p>
               ) : participants.length === 0 ? (
-                <p className="text-center text-sm text-slate-500 py-8 font-medium">Por ahora no hay participantes.</p>
+                <p className="text-center text-sm text-slate-500 py-8 font-medium">Por ahora no hay participantes registrados en Firestore.</p>
               ) : (
                 <table className="w-full text-left text-sm">
                   <thead>

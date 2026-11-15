@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RENOVA - Plataforma Ciudadana</title>
+    <meta name="robots" content="index, follow">
+    <title>Renova-Ecohuella</title>
     
+    <!-- Logotipo / Favicon para la pestaña del navegador -->
+    <link rel="icon" type="image/png" href="./Meshy_AI_.png">
+    <link rel="shortcut icon" type="image/png" href="./Meshy_AI_.png">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React y ReactDOM CDN -->
@@ -12,6 +17,11 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <!-- Babel para compilar JSX en el navegador -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <style>
       @keyframes fadeIn {
@@ -27,7 +37,25 @@
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState, useEffect, useMemo } = React;
+      const { useState, useEffect } = React;
+
+      // ── CONFIGURACIÓN DE FIREBASE ──
+      const firebaseConfig = {
+        apiKey: "AIzaSyDl5hNXtDeyXY0noD4ojZyfXLqy3FtgJvU",
+        authDomain: "renova-fa094.firebaseapp.com",
+        projectId: "renova-fa094",
+        storageBucket: "renova-fa094.firebasestorage.app",
+        messagingSenderId: "499428277533",
+        appId: "1:499428277533:web:b60e50a61ac2da510b35f4",
+        measurementId: "G-Z09KNFMHVL"
+      };
+
+      // Inicializar Firebase
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      const auth = firebase.auth();
+      const db = firebase.firestore();
 
       // ── BANCO DE PREGUNTAS DINÁMICAS (BOT) ──
       const QUESTION_POOL = [
@@ -41,25 +69,18 @@
 
       const DIY_IDEAS_DATA = [
         {
-          id: 1, title: "Macetas Auto-Regables con Botellas PET", category: "Plástico", difficulty: "Fácil", timeNeeded: "20 min", likes: 142,
+          id: 1, title: "Macetas Auto-Regables con Botellas PET", category: "Plástico", difficulty: "Fácil", timeNeeded: "20 min",
           image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
           description: "Aprovecha botellas de plástico vacías para crear un sistema de autorriego ideal para menta y suculentas.",
           materials: ["Botella de plástico de 2L", "Cuerda de algodón", "Tierra", "Tijeras"],
-          steps: ["Corta la botella por la mitad.", "Pasa cuerda de algodón por la tapa.", "Coloca la parte superior invertida y añade tierra y planta."]
+          steps: ["Corta la botella por la mitad.", "Pasa cuerda de algodón por la tapa.", "Coloca la parte superior invertida y añade tierra."]
         },
         {
-          id: 2, title: "Compostero Casero en Caja de Frutas", category: "Orgánico", difficulty: "Intermedio", timeNeeded: "45 min", likes: 210,
+          id: 2, title: "Compostero Casero en Caja de Frutas", category: "Orgánico", difficulty: "Intermedio", timeNeeded: "45 min",
           image: "https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?auto=format&fit=crop&w=800&q=80",
           description: "Transforma desperdicios de cocina en abono rico para tus plantas usando huacales de madera.",
           materials: ["Huacal de madera", "Cartón seco", "Restos vegetales", "Hojas secas"],
           steps: ["Forra el huacal con cartón perforado.", "Añade capas alternas de restos vegetales y hojas secas."]
-        },
-        {
-          id: 3, title: "Organizador de Escritorio de Cartón", category: "Cartón", difficulty: "Fácil", timeNeeded: "30 min", likes: 175,
-          image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80",
-          description: "Crea compartimentos para lápices y papeles utilizando cajas de cereal o envases rígidos.",
-          materials: ["Cajas de cereal limpias", "Papel kraft", "Pegamento", "Tijeras"],
-          steps: ["Corta las cajas de cereal en diagonal a diferentes alturas.", "Une las cajas con pegamento.", "Decora el exterior."]
         }
       ];
 
@@ -88,37 +109,47 @@
         }
       ];
 
-      const INITIAL_LEADERBOARD = [
-        { name: "Sofía Martínez", level: "Avanzado", points: 145.0 },
-        { name: "Carlos R.", level: "Intermedio", points: 112.5 },
-        { name: "Ana Lucía G.", level: "Iniciado", points: 89.0 },
-        { name: "Mateo Pérez", level: "Iniciado", points: 64.5 }
-      ];
-
       function App() {
         const [activeTab, setActiveTab] = useState('home');
-        const [user, setUser] = useState({ name: 'Ciudadano RENOVA', email: 'usuario@renova.org', points: 45.0 });
+        const [user, setUser] = useState(null);
+        const [loginModalOpen, setLoginModalOpen] = useState(false);
         const [notification, setNotification] = useState(null);
-        
-        // Bot de Preguntas
+        const [selectedConference, setSelectedConference] = useState(null);
+        const [rsvpModalOpen, setRsvpModalOpen] = useState(false);
+        const [selectedIdea, setSelectedIdea] = useState(null);
+
+        // Estado del Bot de Preguntas
         const [questionsDoneToday, setQuestionsDoneToday] = useState(0);
         const [currentQIndex, setCurrentQIndex] = useState(0);
         const [questionScore, setQuestionScore] = useState(0);
         const [questionMsg, setQuestionMsg] = useState(null);
 
-        // Calculadora de impacto
-        const [calcState, setCalcState] = useState({ plasticKg: 2.5, paperKg: 1.8, glassKg: 1.2, metalKg: 0.8, goal: 50 });
+        // Estado de Calculadora y Registro
+        const [calcState, setCalcState] = useState({
+          habits: 'Todavía no',
+          plasticKg: 2.5,
+          paperKg: 1.8,
+          glassKg: 1.2,
+          metalKg: 0.8,
+          goal: 50
+        });
         const [showCalcTable, setShowCalcTable] = useState(false);
         const [uploadMode, setUploadMode] = useState('pesa');
         const [uploadMaterial, setUploadMaterial] = useState('carton');
         const [estimatedResult, setEstimatedResult] = useState(null);
 
-        // DIY Modal
-        const [selectedIdea, setSelectedIdea] = useState(null);
-
-        // Conferencias RSVP Modal
-        const [selectedConference, setSelectedConference] = useState(null);
-        const [rsvpModalOpen, setRsvpModalOpen] = useState(false);
+        // Escuchar cambios de autenticación en Firebase
+        useEffect(() => {
+          const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+            if (firebaseUser) {
+              const name = firebaseUser.email.split('@')[0];
+              setUser({ name, email: firebaseUser.email });
+            } else {
+              setUser(null);
+            }
+          });
+          return () => unsubscribe();
+        }, []);
 
         const showToast = (msg) => {
           setNotification(msg);
@@ -127,7 +158,7 @@
 
         const handleAnswer = (optionIndex) => {
           if (questionsDoneToday >= 4) {
-            showToast("⚠️ Ya alcanzaste el límite de 4 preguntas por hoy.");
+            showToast("⚠️ Ya alcanzaste el límite de 4 preguntas por hoy. ¡Vuelve mañana!");
             return;
           }
           const currentQ = QUESTION_POOL[currentQIndex % QUESTION_POOL.length];
@@ -169,7 +200,7 @@
               </div>
             )}
 
-            <Header activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
+            <Header activeTab={activeTab} setActiveTab={setActiveTab} user={user} setLoginModalOpen={setLoginModalOpen} setUser={setUser} />
 
             <main className="flex-1">
               {activeTab === 'home' && (
@@ -184,7 +215,8 @@
               )}
               {activeTab === 'cambio' && (
                 <MiCambioSection 
-                  user={user}
+                  user={user} 
+                  setLoginModalOpen={setLoginModalOpen} 
                   calcState={calcState} 
                   setCalcState={setCalcState} 
                   showCalcTable={showCalcTable} 
@@ -200,9 +232,7 @@
               {activeTab === 'leaderboard' && (
                 <LeaderboardSection user={user} questionScore={questionScore} />
               )}
-              {activeTab === 'ideas' && (
-                <DIYSection setSelectedIdea={setSelectedIdea} />
-              )}
+              {activeTab === 'ideas' && <DIYSection setSelectedIdea={setSelectedIdea} />}
               {activeTab === 'conferencias' && (
                 <ConferencesSection 
                   setSelectedConference={setSelectedConference}
@@ -214,25 +244,30 @@
 
             <Footer />
 
-            {selectedIdea && (
-              <DIYDetailModal idea={selectedIdea} onClose={() => setSelectedIdea(null)} showToast={showToast} />
-            )}
-
+            {loginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} setUser={setUser} showToast={showToast} />}
             {rsvpModalOpen && selectedConference && (
               <RSVPModal conference={selectedConference} onClose={() => setRsvpModalOpen(false)} showToast={showToast} />
+            )}
+            {selectedIdea && (
+              <DIYDetailModal idea={selectedIdea} onClose={() => setSelectedIdea(null)} showToast={showToast} />
             )}
           </div>
         );
       }
 
-      function Header({ activeTab, setActiveTab, user }) {
+      function Header({ activeTab, setActiveTab, user, setLoginModalOpen, setUser }) {
+        const handleLogout = () => {
+          auth.signOut().then(() => {
+            setUser(null);
+            window.location.reload();
+          });
+        };
+
         return (
           <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-emerald-100 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
               <div onClick={() => setActiveTab('home')} className="flex items-center gap-3 cursor-pointer">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-xl shadow-md">
-                  R
-                </div>
+                <img src="Meshy_AI_.png" alt="Logo RENOVA" className="w-11 h-11 rounded-xl object-contain shadow-sm border border-emerald-100 bg-white p-0.5" />
                 <span className="font-extrabold text-2xl text-teal-900 tracking-tight">RENOVA</span>
               </div>
               <nav className="hidden md:flex items-center gap-1 lg:gap-2">
@@ -243,10 +278,17 @@
                 <button onClick={() => setActiveTab('conferencias')} className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'conferencias' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📅 Conferencias</button>
                 <button onClick={() => setActiveTab('guia')} className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'guia' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📖 Guía</button>
               </nav>
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-2xl flex items-center gap-2">
-                  <span className="text-xs font-bold text-emerald-900">👤 {user.name}</span>
-                </div>
+              <div>
+                {user ? (
+                  <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-2xl">
+                    <span className="text-xs font-bold text-emerald-900">👤 {user.name}</span>
+                    <button onClick={handleLogout} className="text-xs text-rose-600 hover:underline">Salir</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setLoginModalOpen(true)} className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-2xl shadow transition">
+                    🔑 Iniciar Sesión
+                  </button>
+                )}
               </div>
             </div>
           </header>
@@ -376,7 +418,7 @@
         );
       }
 
-      function MiCambioSection({ user, calcState, setCalcState, showCalcTable, setShowCalcTable, uploadMode, setUploadMode, uploadMaterial, setUploadMaterial, handleEstimate, estimatedResult }) {
+      function MiCambioSection({ user, setLoginModalOpen, calcState, setCalcState, showCalcTable, setShowCalcTable, uploadMode, setUploadMode, uploadMaterial, setUploadMaterial, handleEstimate, estimatedResult }) {
         return (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
             <div className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white p-8 rounded-3xl shadow-lg">
@@ -466,44 +508,54 @@
             {showCalcTable && (
               <div className="bg-white p-8 rounded-3xl border shadow-sm space-y-6">
                 <h3 className="text-xl font-bold text-slate-900">Tu Tabla de Impacto Personalizada</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b bg-emerald-50 text-emerald-900">
-                        <th className="p-3">Material</th>
-                        <th className="p-3">Generado (kg)</th>
-                        <th className="p-3">A Reciclar ({calcState.goal}%)</th>
-                        <th className="p-3">Puntos Estimados</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      <tr>
-                        <td className="p-3 font-medium">Plástico (PET)</td>
-                        <td className="p-3">{calcState.plasticKg} kg</td>
-                        <td className="p-3 font-bold text-emerald-700">{(calcState.plasticKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                        <td className="p-3 font-bold text-amber-700">+{(calcState.plasticKg * (calcState.goal/100) * 1.5).toFixed(1)} Pts</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-medium">Papel y Cartón</td>
-                        <td className="p-3">{calcState.paperKg} kg</td>
-                        <td className="p-3 font-bold text-emerald-700">{(calcState.paperKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                        <td className="p-3 font-bold text-amber-700">+{(calcState.paperKg * (calcState.goal/100) * 8).toFixed(0)} Pts</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-medium">Vidrio</td>
-                        <td className="p-3">{calcState.glassKg} kg</td>
-                        <td className="p-3 font-bold text-emerald-700">{(calcState.glassKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                        <td className="p-3 font-bold text-amber-700">+{(calcState.glassKg * (calcState.goal/100) * 2).toFixed(0)} Pts</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-medium">Metales</td>
-                        <td className="p-3">{calcState.metalKg} kg</td>
-                        <td className="p-3 font-bold text-emerald-700">{(calcState.metalKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                        <td className="p-3 font-bold text-amber-700">+{(calcState.metalKg * (calcState.goal/100) * 15).toFixed(0)} Pts</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                {user ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b bg-emerald-50 text-emerald-900">
+                          <th className="p-3">Material</th>
+                          <th className="p-3">Generado (kg)</th>
+                          <th className="p-3">A Reciclar ({calcState.goal}%)</th>
+                          <th className="p-3">Puntos Estimados</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        <tr>
+                          <td className="p-3 font-medium">Plástico (PET)</td>
+                          <td className="p-3">{calcState.plasticKg} kg</td>
+                          <td className="p-3 font-bold text-emerald-700">{(calcState.plasticKg * (calcState.goal/100)).toFixed(1)} kg</td>
+                          <td className="p-3 font-bold text-amber-700">+{(calcState.plasticKg * (calcState.goal/100) * 1.5).toFixed(1)} Pts</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-medium">Papel y Cartón</td>
+                          <td className="p-3">{calcState.paperKg} kg</td>
+                          <td className="p-3 font-bold text-emerald-700">{(calcState.paperKg * (calcState.goal/100)).toFixed(1)} kg</td>
+                          <td className="p-3 font-bold text-amber-700">+{(calcState.paperKg * (calcState.goal/100) * 8).toFixed(0)} Pts</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-medium">Vidrio</td>
+                          <td className="p-3">{calcState.glassKg} kg</td>
+                          <td className="p-3 font-bold text-emerald-700">{(calcState.glassKg * (calcState.goal/100)).toFixed(1)} kg</td>
+                          <td className="p-3 font-bold text-amber-700">+{(calcState.glassKg * (calcState.goal/100) * 2).toFixed(0)} Pts</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-medium">Metales</td>
+                          <td className="p-3">{calcState.metalKg} kg</td>
+                          <td className="p-3 font-bold text-emerald-700">{(calcState.metalKg * (calcState.goal/100)).toFixed(1)} kg</td>
+                          <td className="p-3 font-bold text-amber-700">+{(calcState.metalKg * (calcState.goal/100) * 15).toFixed(0)} Pts</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 p-6 rounded-2xl text-center space-y-3">
+                    <p className="text-amber-900 font-bold text-sm">⚠️ Sesión no iniciada</p>
+                    <p className="text-xs text-amber-800">Por favor inicia sesión para ver tus logros y registrar tu reciclaje.</p>
+                    <button onClick={() => setLoginModalOpen(true)} className="bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-bold">
+                      Iniciar Sesión Ahora
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -511,38 +563,60 @@
       }
 
       function LeaderboardSection({ user, questionScore }) {
-        const fullList = [
-          ...INITIAL_LEADERBOARD,
-          { name: user.name + ' (Tú)', level: 'Iniciado', points: user.points + questionScore }
-        ].sort((a, b) => b.points - a.points);
+        const [participants, setParticipants] = useState([]);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+          const unsubscribe = db.collection('users').onSnapshot((snapshot) => {
+            const usersList = [];
+            snapshot.forEach((doc) => {
+              usersList.push(doc.data());
+            });
+            usersList.sort((a, b) => (b.points || 0) - (a.points || 0));
+            setParticipants(usersList);
+            setLoading(false);
+          }, (err) => {
+            console.error("Error al escuchar la base de datos:", err);
+            setLoading(false);
+          });
+          return () => unsubscribe();
+        }, []);
 
         return (
           <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
             <div className="text-center space-y-2">
               <h1 className="text-3xl font-black text-slate-900">🏆 Tabla de Clasificación por Puntos</h1>
-              <p className="text-sm text-slate-600">Participantes activos en la comunidad RENOVA.</p>
+              <p className="text-sm text-slate-600">Participantes reales sincronizados en tiempo real con Firestore.</p>
             </div>
             <div className="bg-white rounded-3xl border shadow-sm overflow-hidden p-6">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b bg-emerald-50 text-emerald-900">
-                    <th className="p-3">Posición</th>
-                    <th className="p-3">Nombre</th>
-                    <th className="p-3">Nivel</th>
-                    <th className="p-3 text-right">Puntos Totales</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {fullList.map((row, idx) => (
-                    <tr key={idx} className={idx === 0 ? "bg-amber-50/50 font-bold" : ""}>
-                      <td className="p-3">#{idx + 1}</td>
-                      <td className="p-3">{row.name}</td>
-                      <td className="p-3"><span className="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-1 rounded-md font-bold">{row.level}</span></td>
-                      <td className="p-3 text-right font-black text-emerald-700">{row.points.toFixed(1)} Pts</td>
+              {loading ? (
+                <p className="text-center text-xs text-slate-500 py-6">Cargando participantes...</p>
+              ) : participants.length === 0 ? (
+                <p className="text-center text-sm text-slate-500 py-8 font-medium">Por ahora no hay participantes registrados en la base de datos.</p>
+              ) : (
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b bg-emerald-50 text-emerald-900">
+                      <th className="p-3">Posición</th>
+                      <th className="p-3">Nombre</th>
+                      <th className="p-3">Nivel</th>
+                      <th className="p-3 text-right">Puntos Totales</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y">
+                    {participants.map((row, idx) => (
+                      <tr key={idx} className={user && user.email === row.email ? "bg-emerald-50/60 font-bold" : ""}>
+                        <td className="p-3">#{idx + 1}</td>
+                        <td className="p-3">{row.name} {user && user.email === row.email ? '(Tú)' : ''}</td>
+                        <td className="p-3"><span className="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-1 rounded-md font-bold">Iniciado</span></td>
+                        <td className="p-3 text-right font-black text-emerald-700">
+                          {user && user.email === row.email ? ((row.points || 0) + questionScore).toFixed(1) : (row.points || 0)} Pts
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         );
@@ -837,10 +911,65 @@
         );
       }
 
+      function LoginModal({ onClose, setUser, showToast }) {
+        const [email, setEmail] = useState('');
+        const [password, setPassword] = useState('');
+
+        const handleFirebaseLogin = (e) => {
+          e.preventDefault();
+          auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+              const u = userCredential.user;
+              const name = u.email.split('@')[0];
+              setUser({ name, email: u.email });
+              db.collection('users').doc(u.email).set({
+                name: name,
+                email: u.email,
+                points: firebase.firestore.FieldValue.increment(0)
+              }, { merge: true });
+              showToast("¡Sesión iniciada con éxito en Firebase! 🔥");
+              onClose();
+            })
+            .catch(() => {
+              auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                  const u = userCredential.user;
+                  const name = u.email.split('@')[0];
+                  setUser({ name, email: u.email });
+                  db.collection('users').doc(u.email).set({
+                    name: name,
+                    email: u.email,
+                    points: 0
+                  });
+                  showToast("¡Cuenta creada y sesión iniciada! 🎉");
+                  onClose();
+                })
+                .catch((err) => {
+                  alert("Error de autenticación: " + err.message);
+                });
+            });
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative">
+              <button onClick={onClose} className="absolute top-4 right-4 font-bold text-slate-400 hover:text-slate-600">✕</button>
+              <h3 className="text-xl font-bold text-slate-900">Iniciar Sesión en RENOVA</h3>
+              <p className="text-xs text-slate-600">Conéctate mediante Firebase para guardar tus puntos y aparecer en la clasificación.</p>
+              <form onSubmit={handleFirebaseLogin} className="space-y-3">
+                <input type="email" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs" required />
+                <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs" required />
+                <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs">Entrar / Registrarse</button>
+              </form>
+            </div>
+          </div>
+        );
+      }
+
       function Footer() {
         return (
           <footer className="bg-slate-900 text-white border-t border-slate-800 py-8 text-center text-xs text-slate-400">
-            RENOVA • Menos huella. Más futuro. • {new Date().getFullYear()}
+            Eco Huella • Menos huella. Más futuro. • {new Date().getFullYear()} RENOVA
           </footer>
         );
       }

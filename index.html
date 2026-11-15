@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="index, follow">
     <title>RENOVA - Plataforma Ciudadana</title>
     
-    <!-- Logotipo / Favicon para la pestaña del navegador -->
-    <link rel="icon" type="image/png" href="./Meshy_AI_.png">
-
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React y ReactDOM CDN -->
@@ -17,34 +13,21 @@
     <!-- Babel para compilar JSX en el navegador -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.25s ease-out forwards;
+      }
+    </style>
 </head>
 <body class="bg-emerald-50/40 text-slate-800 font-sans selection:bg-emerald-200 selection:text-emerald-900">
     <div id="root"></div>
 
     <script type="text/babel">
-      const { useState, useEffect } = React;
-
-      // ── CONFIGURACIÓN DE FIREBASE ──
-      const firebaseConfig = {
-        apiKey: "AIzaSyDl5hNXtDeyXY0noD4ojZyfXLqy3FtgJvU",
-        authDomain: "renova-fa094.firebaseapp.com",
-        projectId: "renova-fa094",
-        storageBucket: "renova-fa094.firebasestorage.app",
-        messagingSenderId: "499428277533",
-        appId: "1:499428277533:web:b60e50a61ac2da510b35f4",
-        measurementId: "G-Z09KNFMHVL"
-      };
-
-      // Inicializar Firebase
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-      const auth = firebase.auth();
-      const db = firebase.firestore();
+      const { useState, useEffect, useMemo } = React;
 
       // ── BANCO DE PREGUNTAS DINÁMICAS (BOT) ──
       const QUESTION_POOL = [
@@ -58,59 +41,84 @@
 
       const DIY_IDEAS_DATA = [
         {
-          id: 1, title: "Macetas Auto-Regables con Botellas PET", category: "Plástico", timeNeeded: "20 min",
+          id: 1, title: "Macetas Auto-Regables con Botellas PET", category: "Plástico", difficulty: "Fácil", timeNeeded: "20 min", likes: 142,
           image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
           description: "Aprovecha botellas de plástico vacías para crear un sistema de autorriego ideal para menta y suculentas.",
           materials: ["Botella de plástico de 2L", "Cuerda de algodón", "Tierra", "Tijeras"],
-          steps: ["Corta la botella por la mitad.", "Pasa cuerda de algodón por la tapa.", "Coloca la parte superior invertida y añade tierra."]
+          steps: ["Corta la botella por la mitad.", "Pasa cuerda de algodón por la tapa.", "Coloca la parte superior invertida y añade tierra y planta."]
         },
         {
-          id: 2, title: "Compostero Casero en Caja de Frutas", category: "Orgánico", timeNeeded: "45 min",
+          id: 2, title: "Compostero Casero en Caja de Frutas", category: "Orgánico", difficulty: "Intermedio", timeNeeded: "45 min", likes: 210,
           image: "https://images.unsplash.com/photo-1591857177580-dc82b9ac4e1e?auto=format&fit=crop&w=800&q=80",
           description: "Transforma desperdicios de cocina en abono rico para tus plantas usando huacales de madera.",
           materials: ["Huacal de madera", "Cartón seco", "Restos vegetales", "Hojas secas"],
           steps: ["Forra el huacal con cartón perforado.", "Añade capas alternas de restos vegetales y hojas secas."]
+        },
+        {
+          id: 3, title: "Organizador de Escritorio de Cartón", category: "Cartón", difficulty: "Fácil", timeNeeded: "30 min", likes: 175,
+          image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80",
+          description: "Crea compartimentos para lápices y papeles utilizando cajas de cereal o envases rígidos.",
+          materials: ["Cajas de cereal limpias", "Papel kraft", "Pegamento", "Tijeras"],
+          steps: ["Corta las cajas de cereal en diagonal a diferentes alturas.", "Une las cajas con pegamento.", "Decora el exterior."]
         }
+      ];
+
+      const CONFERENCES_DATA = [
+        {
+          id: 1,
+          title: "Economía Circular: De Residuo a Recurso en la Ciudad",
+          speaker: "Dra. Elena Rostova",
+          speakerRole: "Especialista en Gestión Ambiental",
+          speakerAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
+          date: "Jueves 12 de Noviembre",
+          time: "06:00 PM - 07:30 PM",
+          mode: "Presencial & Streaming",
+          description: "Estrategias prácticas para reducir desperdicios a escala familiar y pequeños comercios locales."
+        },
+        {
+          id: 2,
+          title: "El Impacto de los Microplásticos en Nuestro Entorno",
+          speaker: "Ing. Carlos Mendoza",
+          speakerRole: "Fundador de Ecología Activa",
+          speakerAvatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80",
+          date: "Martes 18 de Noviembre",
+          time: "05:00 PM - 06:30 PM",
+          mode: "Online (Zoom)",
+          description: "Análisis del ciclo de vida del plástico y cómo sustituirlo efectivamente en el consumo diario."
+        }
+      ];
+
+      const INITIAL_LEADERBOARD = [
+        { name: "Sofía Martínez", level: "Avanzado", points: 145.0 },
+        { name: "Carlos R.", level: "Intermedio", points: 112.5 },
+        { name: "Ana Lucía G.", level: "Iniciado", points: 89.0 },
+        { name: "Mateo Pérez", level: "Iniciado", points: 64.5 }
       ];
 
       function App() {
         const [activeTab, setActiveTab] = useState('home');
-        const [user, setUser] = useState(null);
-        const [loginModalOpen, setLoginModalOpen] = useState(false);
+        const [user, setUser] = useState({ name: 'Ciudadano RENOVA', email: 'usuario@renova.org', points: 45.0 });
         const [notification, setNotification] = useState(null);
-
-        // Estado del Bot de Preguntas (Límite 4 al día, 0.5 pts c/u)
+        
+        // Bot de Preguntas
         const [questionsDoneToday, setQuestionsDoneToday] = useState(0);
         const [currentQIndex, setCurrentQIndex] = useState(0);
         const [questionScore, setQuestionScore] = useState(0);
         const [questionMsg, setQuestionMsg] = useState(null);
 
-        // Estado de Calculadora y Registro
-        const [calcState, setCalcState] = useState({
-          habits: 'Todavía no',
-          plasticKg: 2.5,
-          paperKg: 1.8,
-          glassKg: 1.2,
-          metalKg: 0.8,
-          goal: 50
-        });
+        // Calculadora de impacto
+        const [calcState, setCalcState] = useState({ plasticKg: 2.5, paperKg: 1.8, glassKg: 1.2, metalKg: 0.8, goal: 50 });
         const [showCalcTable, setShowCalcTable] = useState(false);
         const [uploadMode, setUploadMode] = useState('pesa');
         const [uploadMaterial, setUploadMaterial] = useState('carton');
         const [estimatedResult, setEstimatedResult] = useState(null);
 
-        // Escuchar cambios de autenticación en Firebase
-        useEffect(() => {
-          const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
-            if (firebaseUser) {
-              const name = firebaseUser.email.split('@')[0];
-              setUser({ name, email: firebaseUser.email });
-            } else {
-              setUser(null);
-            }
-          });
-          return () => unsubscribe();
-        }, []);
+        // DIY Modal
+        const [selectedIdea, setSelectedIdea] = useState(null);
+
+        // Conferencias RSVP Modal
+        const [selectedConference, setSelectedConference] = useState(null);
+        const [rsvpModalOpen, setRsvpModalOpen] = useState(false);
 
         const showToast = (msg) => {
           setNotification(msg);
@@ -119,7 +127,7 @@
 
         const handleAnswer = (optionIndex) => {
           if (questionsDoneToday >= 4) {
-            showToast("⚠️ Ya alcanzaste el límite de 4 preguntas por hoy. ¡Vuelve mañana!");
+            showToast("⚠️ Ya alcanzaste el límite de 4 preguntas por hoy.");
             return;
           }
           const currentQ = QUESTION_POOL[currentQIndex % QUESTION_POOL.length];
@@ -141,15 +149,15 @@
         const handleEstimate = () => {
           const baseGuessKg = (Math.random() * 2 + 0.5).toFixed(2);
           const safeKg = (baseGuessKg * 0.8).toFixed(2); 
-          const pointsEarned = (safeKg * (uploadMaterial === 'latas' ? 15 : 8)).toFixed(1);
+          const pointsEarned = Number((safeKg * (uploadMaterial === 'latas' ? 15 : 8)).toFixed(1));
           
           setEstimatedResult({
             material: uploadMaterial === 'latas' ? 'Latas / Metales' : 'Cartón / Papel',
             kg: safeKg,
             pts: pointsEarned
           });
-          setQuestionScore(prev => prev + Number(pointsEarned));
-          showToast(`Registro procesado con éxito: ${safeKg} kg calculados.`);
+          setQuestionScore(prev => prev + pointsEarned);
+          showToast(`Registro procesado con éxito: ${safeKg} kg calculados (+${pointsEarned} Pts).`);
         };
 
         return (
@@ -161,7 +169,7 @@
               </div>
             )}
 
-            <Header activeTab={activeTab} setActiveTab={setActiveTab} user={user} setLoginModalOpen={setLoginModalOpen} setUser={setUser} />
+            <Header activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
 
             <main className="flex-1">
               {activeTab === 'home' && (
@@ -176,8 +184,7 @@
               )}
               {activeTab === 'cambio' && (
                 <MiCambioSection 
-                  user={user} 
-                  setLoginModalOpen={setLoginModalOpen} 
+                  user={user}
                   calcState={calcState} 
                   setCalcState={setCalcState} 
                   showCalcTable={showCalcTable} 
@@ -193,50 +200,53 @@
               {activeTab === 'leaderboard' && (
                 <LeaderboardSection user={user} questionScore={questionScore} />
               )}
-              {activeTab === 'ideas' && <DIYSection />}
+              {activeTab === 'ideas' && (
+                <DIYSection setSelectedIdea={setSelectedIdea} />
+              )}
+              {activeTab === 'conferencias' && (
+                <ConferencesSection 
+                  setSelectedConference={setSelectedConference}
+                  setRsvpModalOpen={setRsvpModalOpen}
+                />
+              )}
               {activeTab === 'guia' && <RecyclingGuideSection />}
             </main>
 
             <Footer />
 
-            {loginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} setUser={setUser} showToast={showToast} />}
+            {selectedIdea && (
+              <DIYDetailModal idea={selectedIdea} onClose={() => setSelectedIdea(null)} showToast={showToast} />
+            )}
+
+            {rsvpModalOpen && selectedConference && (
+              <RSVPModal conference={selectedConference} onClose={() => setRsvpModalOpen(false)} showToast={showToast} />
+            )}
           </div>
         );
       }
 
-      function Header({ activeTab, setActiveTab, user, setLoginModalOpen, setUser }) {
-        const handleLogout = () => {
-          auth.signOut().then(() => {
-            setUser(null);
-            window.location.reload();
-          });
-        };
-
+      function Header({ activeTab, setActiveTab, user }) {
         return (
           <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-emerald-100 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
               <div onClick={() => setActiveTab('home')} className="flex items-center gap-3 cursor-pointer">
-                <img src="Meshy_AI_.png" alt="Logo" className="w-11 h-11 rounded-xl object-contain shadow-sm border border-emerald-100 bg-white p-0.5" />
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-xl shadow-md">
+                  R
+                </div>
                 <span className="font-extrabold text-2xl text-teal-900 tracking-tight">RENOVA</span>
               </div>
-              <nav className="hidden md:flex items-center gap-2">
-                <button onClick={() => setActiveTab('home')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'home' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>🌱 Inicio</button>
-                <button onClick={() => setActiveTab('cambio')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'cambio' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📊 Mi Cambio</button>
-                <button onClick={() => setActiveTab('leaderboard')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'leaderboard' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>🏆 Tabla de Puntos</button>
-                <button onClick={() => setActiveTab('ideas')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'ideas' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>💡 DIY</button>
-                <button onClick={() => setActiveTab('guia')} className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'guia' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📖 Guía</button>
+              <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+                <button onClick={() => setActiveTab('home')} className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'home' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>🌱 Inicio</button>
+                <button onClick={() => setActiveTab('cambio')} className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'cambio' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📊 Mi Cambio</button>
+                <button onClick={() => setActiveTab('leaderboard')} className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'leaderboard' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>🏆 Tabla de Puntos</button>
+                <button onClick={() => setActiveTab('ideas')} className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'ideas' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>💡 DIY</button>
+                <button onClick={() => setActiveTab('conferencias')} className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'conferencias' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📅 Conferencias</button>
+                <button onClick={() => setActiveTab('guia')} className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition ${activeTab === 'guia' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-emerald-50'}`}>📖 Guía</button>
               </nav>
-              <div>
-                {user ? (
-                  <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-2xl">
-                    <span className="text-xs font-bold text-emerald-900">👤 {user.name}</span>
-                    <button onClick={handleLogout} className="text-xs text-rose-600 hover:underline">Salir</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setLoginModalOpen(true)} className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-5 py-2.5 rounded-2xl shadow transition">
-                    🔑 Iniciar Sesión
-                  </button>
-                )}
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-2xl flex items-center gap-2">
+                  <span className="text-xs font-bold text-emerald-900">👤 {user.name}</span>
+                </div>
               </div>
             </div>
           </header>
@@ -267,8 +277,8 @@
                     <button onClick={() => setActiveTab('cambio')} className="bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold px-7 py-3.5 rounded-2xl shadow-lg transition">
                       Calcula tu impacto
                     </button>
-                    <button onClick={() => setActiveTab('cambio')} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-6 py-3.5 rounded-2xl transition">
-                      Mi cambio 📊
+                    <button onClick={() => setActiveTab('guia')} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-6 py-3.5 rounded-2xl transition">
+                      Ver Guía de Reciclaje 📖
                     </button>
                   </div>
                 </div>
@@ -319,7 +329,7 @@
             <section className="max-w-4xl mx-auto px-4">
               <div className="bg-white rounded-3xl border p-8 shadow-sm text-center space-y-4">
                 <h3 className="text-xl font-bold text-slate-900">Conéctate con Nosotros</h3>
-                <p className="text-xs text-slate-600">Si tiene dudas contactenos en Gmail: <span className="font-bold text-emerald-800">renova.ms1a@gmail.com</span></p>
+                <p className="text-xs text-slate-600">Si tienes dudas contáctanos en Gmail: <span className="font-bold text-emerald-800">renova.ms1a@gmail.com</span></p>
                 <div className="flex justify-center gap-4 pt-2">
                   <a 
                     href="https://www.instagram.com/renova_1a?vrfl=MWw1NnphNmFkMjI5ZA==" 
@@ -366,7 +376,7 @@
         );
       }
 
-      function MiCambioSection({ user, setLoginModalOpen, calcState, setCalcState, showCalcTable, setShowCalcTable, uploadMode, setUploadMode, uploadMaterial, setUploadMaterial, handleEstimate, estimatedResult }) {
+      function MiCambioSection({ user, calcState, setCalcState, showCalcTable, setShowCalcTable, uploadMode, setUploadMode, uploadMaterial, setUploadMaterial, handleEstimate, estimatedResult }) {
         return (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
             <div className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white p-8 rounded-3xl shadow-lg">
@@ -453,58 +463,47 @@
               </button>
             </div>
 
-            {/* TABLA PERSONALIZADA */}
             {showCalcTable && (
               <div className="bg-white p-8 rounded-3xl border shadow-sm space-y-6">
                 <h3 className="text-xl font-bold text-slate-900">Tu Tabla de Impacto Personalizada</h3>
-                {user ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead>
-                        <tr className="border-b bg-emerald-50 text-emerald-900">
-                          <th className="p-3">Material</th>
-                          <th className="p-3">Generado (kg)</th>
-                          <th className="p-3">A Reciclar ({calcState.goal}%)</th>
-                          <th className="p-3">Puntos Estimados</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        <tr>
-                          <td className="p-3 font-medium">Plástico (PET)</td>
-                          <td className="p-3">{calcState.plasticKg} kg</td>
-                          <td className="p-3 font-bold text-emerald-700">{(calcState.plasticKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                          <td className="p-3 font-bold text-amber-700">+{(calcState.plasticKg * (calcState.goal/100) * 1.5).toFixed(1)} Pts</td>
-                        </tr>
-                        <tr>
-                          <td className="p-3 font-medium">Papel y Cartón</td>
-                          <td className="p-3">{calcState.paperKg} kg</td>
-                          <td className="p-3 font-bold text-emerald-700">{(calcState.paperKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                          <td className="p-3 font-bold text-amber-700">+{(calcState.paperKg * (calcState.goal/100) * 8).toFixed(0)} Pts</td>
-                        </tr>
-                        <tr>
-                          <td className="p-3 font-medium">Vidrio</td>
-                          <td className="p-3">{calcState.glassKg} kg</td>
-                          <td className="p-3 font-bold text-emerald-700">{(calcState.glassKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                          <td className="p-3 font-bold text-amber-700">+{(calcState.glassKg * (calcState.goal/100) * 2).toFixed(0)} Pts</td>
-                        </tr>
-                        <tr>
-                          <td className="p-3 font-medium">Metales</td>
-                          <td className="p-3">{calcState.metalKg} kg</td>
-                          <td className="p-3 font-bold text-emerald-700">{(calcState.metalKg * (calcState.goal/100)).toFixed(1)} kg</td>
-                          <td className="p-3 font-bold text-amber-700">+{(calcState.metalKg * (calcState.goal/100) * 15).toFixed(0)} Pts</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="bg-amber-50 border border-amber-200 p-6 rounded-2xl text-center space-y-3">
-                    <p className="text-amber-900 font-bold text-sm">⚠️ Sesión no iniciada</p>
-                    <p className="text-xs text-amber-800">Por favor inicia sesión para ver tus logros y registrar tu reciclaje.</p>
-                    <button onClick={() => setLoginModalOpen(true)} className="bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-bold">
-                      Iniciar Sesión Ahora
-                    </button>
-                  </div>
-                )}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b bg-emerald-50 text-emerald-900">
+                        <th className="p-3">Material</th>
+                        <th className="p-3">Generado (kg)</th>
+                        <th className="p-3">A Reciclar ({calcState.goal}%)</th>
+                        <th className="p-3">Puntos Estimados</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      <tr>
+                        <td className="p-3 font-medium">Plástico (PET)</td>
+                        <td className="p-3">{calcState.plasticKg} kg</td>
+                        <td className="p-3 font-bold text-emerald-700">{(calcState.plasticKg * (calcState.goal/100)).toFixed(1)} kg</td>
+                        <td className="p-3 font-bold text-amber-700">+{(calcState.plasticKg * (calcState.goal/100) * 1.5).toFixed(1)} Pts</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-medium">Papel y Cartón</td>
+                        <td className="p-3">{calcState.paperKg} kg</td>
+                        <td className="p-3 font-bold text-emerald-700">{(calcState.paperKg * (calcState.goal/100)).toFixed(1)} kg</td>
+                        <td className="p-3 font-bold text-amber-700">+{(calcState.paperKg * (calcState.goal/100) * 8).toFixed(0)} Pts</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-medium">Vidrio</td>
+                        <td className="p-3">{calcState.glassKg} kg</td>
+                        <td className="p-3 font-bold text-emerald-700">{(calcState.glassKg * (calcState.goal/100)).toFixed(1)} kg</td>
+                        <td className="p-3 font-bold text-amber-700">+{(calcState.glassKg * (calcState.goal/100) * 2).toFixed(0)} Pts</td>
+                      </tr>
+                      <tr>
+                        <td className="p-3 font-medium">Metales</td>
+                        <td className="p-3">{calcState.metalKg} kg</td>
+                        <td className="p-3 font-bold text-emerald-700">{(calcState.metalKg * (calcState.goal/100)).toFixed(1)} kg</td>
+                        <td className="p-3 font-bold text-amber-700">+{(calcState.metalKg * (calcState.goal/100) * 15).toFixed(0)} Pts</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
@@ -512,36 +511,16 @@
       }
 
       function LeaderboardSection({ user, questionScore }) {
-        // Lista predeterminada de participantes (con 0 puntos y más) para que la tabla nunca esté vacía
-        const defaultParticipants = [
-          { name: "Equipo RENOVA", level: "Iniciado", points: 15 },
-          { name: "Sofía Martínez", level: "Iniciado", points: 8 },
-          { name: "Carlos Gómez", level: "Iniciado", points: 3 },
-          { name: "Ana Torres", level: "Iniciado", points: 0 }
-        ];
-
-        const [participants, setParticipants] = useState(defaultParticipants);
-
-        useEffect(() => {
-          db.collection('users').get().then((snapshot) => {
-            if (!snapshot.empty) {
-              const usersList = [];
-              snapshot.forEach((doc) => {
-                usersList.push(doc.data());
-              });
-              // Combinamos o sobreescribimos con los reales de Firestore si existen
-              setParticipants(usersList);
-            }
-          }).catch(err => {
-            console.error("Error al cargar clasificación:", err);
-          });
-        }, []);
+        const fullList = [
+          ...INITIAL_LEADERBOARD,
+          { name: user.name + ' (Tú)', level: 'Iniciado', points: user.points + questionScore }
+        ].sort((a, b) => b.points - a.points);
 
         return (
           <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
             <div className="text-center space-y-2">
               <h1 className="text-3xl font-black text-slate-900">🏆 Tabla de Clasificación por Puntos</h1>
-              <p className="text-sm text-slate-600">Participantes registrados y activos en la comunidad.</p>
+              <p className="text-sm text-slate-600">Participantes activos en la comunidad RENOVA.</p>
             </div>
             <div className="bg-white rounded-3xl border shadow-sm overflow-hidden p-6">
               <table className="w-full text-left text-sm">
@@ -554,14 +533,12 @@
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {participants.map((row, idx) => (
-                    <tr key={idx} className={user && user.email === row.email ? "bg-emerald-50/60 font-bold" : ""}>
+                  {fullList.map((row, idx) => (
+                    <tr key={idx} className={idx === 0 ? "bg-amber-50/50 font-bold" : ""}>
                       <td className="p-3">#{idx + 1}</td>
-                      <td className="p-3">{row.name} {user && user.email === row.email ? '(Tú)' : ''}</td>
-                      <td className="p-3"><span className="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-1 rounded-md font-bold">Iniciado</span></td>
-                      <td className="p-3 text-right font-black text-emerald-700">
-                        {user && user.email === row.email ? (row.points + questionScore).toFixed(1) : row.points} Pts
-                      </td>
+                      <td className="p-3">{row.name}</td>
+                      <td className="p-3"><span className="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-1 rounded-md font-bold">{row.level}</span></td>
+                      <td className="p-3 text-right font-black text-emerald-700">{row.points.toFixed(1)} Pts</td>
                     </tr>
                   ))}
                 </tbody>
@@ -571,18 +548,27 @@
         );
       }
 
-      function DIYSection() {
+      function DIYSection({ setSelectedIdea }) {
         return (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-            <h1 className="text-3xl font-black text-slate-900">Proyectos DIY con Reciclaje</h1>
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white p-8 rounded-3xl shadow-lg">
+              <h1 className="text-3xl sm:text-4xl font-black">Proyectos DIY con Reciclaje</h1>
+              <p className="text-emerald-100 mt-2 text-sm">Transforma materiales cotidianos en objetos útiles para tu hogar.</p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {DIY_IDEAS_DATA.map(idea => (
-                <div key={idea.id} className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                <div key={idea.id} onClick={() => setSelectedIdea(idea)} className="bg-white rounded-2xl border shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition flex flex-col">
                   <img src={idea.image} alt={idea.title} className="w-full h-48 object-cover" />
-                  <div className="p-5 space-y-2">
-                    <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1 rounded">{idea.category}</span>
-                    <h3 className="font-bold text-lg">{idea.title}</h3>
-                    <p className="text-xs text-slate-600">{idea.description}</p>
+                  <div className="p-5 space-y-2 flex-1 flex flex-col justify-between">
+                    <div>
+                      <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-md">{idea.category}</span>
+                      <h3 className="font-bold text-lg mt-2">{idea.title}</h3>
+                      <p className="text-xs text-slate-600 mt-1">{idea.description}</p>
+                    </div>
+                    <div className="pt-3 border-t text-xs font-bold text-emerald-700 flex items-center justify-between">
+                      <span>⏱️ {idea.timeNeeded}</span>
+                      <span>Ver Paso a Paso →</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -591,103 +577,261 @@
         );
       }
 
-      function RecyclingGuideSection() {
+      function DIYDetailModal({ idea, onClose, showToast }) {
         return (
-          <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl font-black text-slate-900">📖 Guía Práctica y Videos Educativos</h1>
-              <p className="text-sm text-slate-600">Aprende qué depositar en cada contenedor y visualiza nuestros videos instructivos.</p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
-                <h3 className="font-bold text-lg text-emerald-900">🎥 Guía de separación de residuos</h3>
-                <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 border">
-                  <iframe 
-                    className="w-full h-full"
-                    src="https://www.youtube.com/embed/6jQ7y_qQ8Vc" 
-                    title="Video explicativo de reciclaje"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                  ></iframe>
-                </div>
-                <p className="text-xs text-slate-600">Descubre los pasos fundamentales para organizar tus contenedores en casa o en la comunidad.</p>
-                <div className="pt-2 border-t border-slate-100">
-                  <p className="text-xs font-bold text-emerald-800">Autor: Equipo RENOVA / Coordinación Ambiental</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-5 relative">
+              <button onClick={onClose} className="absolute top-4 right-4 font-bold text-slate-400 hover:text-slate-600">✕</button>
+              <img src={idea.image} alt={idea.title} className="w-full h-48 object-cover rounded-2xl" />
+              <div>
+                <span className="text-xs font-bold text-emerald-700">{idea.category} • {idea.difficulty}</span>
+                <h3 className="text-2xl font-black text-slate-900 mt-1">{idea.title}</h3>
+                <p className="text-xs text-slate-600 mt-1">{idea.description}</p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-800 uppercase">Materiales:</h4>
+                <ul className="text-xs text-slate-700 space-y-1 list-disc list-inside bg-emerald-50/50 p-3 rounded-xl">
+                  {idea.materials.map((m, i) => <li key={i}>{m}</li>)}
+                </ul>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-800 uppercase">Paso a Paso:</h4>
+                <div className="space-y-2">
+                  {idea.steps.map((s, i) => (
+                    <div key={i} className="flex gap-3 text-xs bg-slate-50 p-2.5 rounded-xl border">
+                      <span className="font-bold text-emerald-700">Paso {i+1}:</span>
+                      <span>{s}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
-                <h3 className="font-bold text-lg text-emerald-900">🎥 El impacto del reciclaje de envases</h3>
-                <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 border">
-                  <iframe 
-                    className="w-full h-full"
-                    src="https://www.youtube.com/embed/V1234567890" 
-                    title="Video sobre impacto ambiental"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                  ></iframe>
-                </div>
-                <p className="text-xs text-slate-600">Conoce cómo el manejo adecuado de plásticos y cartón disminuye la huella ecológica.</p>
-                <div className="pt-2 border-t border-slate-100">
-                  <p className="text-xs font-bold text-emerald-800">Autor: Iniciativa Ciudadana RENOVA</p>
-                </div>
-              </div>
+              <button onClick={() => { showToast("¡Proyecto guardado en tus favoritos!"); onClose(); }} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs">
+                Guardar en Favoritos
+              </button>
             </div>
           </div>
         );
       }
 
-      function LoginModal({ onClose, setUser, showToast }) {
-        const [email, setEmail] = useState('');
-        const [password, setPassword] = useState('');
+      function ConferencesSection({ setSelectedConference, setRsvpModalOpen }) {
+        return (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+            <div className="bg-slate-900 text-white p-8 rounded-3xl relative overflow-hidden space-y-3">
+              <span className="bg-amber-400 text-slate-950 text-xs font-extrabold px-3 py-1 rounded-full uppercase">
+                Educación Ambiental Comunitaria
+              </span>
+              <h1 className="text-3xl sm:text-4xl font-black">Conferencias & Charlas Educativas</h1>
+              <p className="text-slate-300 text-sm max-w-2xl">
+                Aprende de biólogos, gestores ambientales y líderes comunitarios. Modalidad presencial y transmisiones en vivo.
+              </p>
+            </div>
 
-        const handleFirebaseLogin = (e) => {
+            <div className="grid md:grid-cols-2 gap-6">
+              {CONFERENCES_DATA.map(conf => (
+                <div key={conf.id} className="bg-white rounded-2xl border shadow-sm hover:shadow-xl transition flex flex-col justify-between overflow-hidden">
+                  <div className="p-6 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800">
+                        {conf.mode}
+                      </span>
+                      <span className="text-xs font-bold text-slate-500">{conf.date}</span>
+                    </div>
+
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-lg leading-snug">{conf.title}</h3>
+                      <p className="text-slate-600 text-xs mt-2 leading-relaxed">{conf.description}</p>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                      <img src={conf.speakerAvatar} alt={conf.speaker} className="w-10 h-10 rounded-full object-cover border" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">{conf.speaker}</p>
+                        <p className="text-[11px] text-slate-500">{conf.speakerRole}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-xs text-slate-500 font-medium">{conf.time}</span>
+                    <button
+                      onClick={() => {
+                        setSelectedConference(conf);
+                        setRsvpModalOpen(true);
+                      }}
+                      className="bg-slate-900 hover:bg-emerald-600 text-white font-bold text-xs px-4 py-2 rounded-xl transition"
+                    >
+                      Reservar Cupo
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      function RSVPModal({ conference, onClose, showToast }) {
+        const [email, setEmail] = useState('');
+        const [done, setDone] = useState(false);
+
+        const handleSubmit = (e) => {
           e.preventDefault();
-          auth.signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-              const u = userCredential.user;
-              const name = u.email.split('@')[0];
-              setUser({ name, email: u.email });
-              db.collection('users').doc(u.email).set({
-                name: name,
-                email: u.email,
-                points: firebase.firestore.FieldValue.increment(0)
-              }, { merge: true });
-              showToast("¡Sesión iniciada con éxito en Firebase! 🔥");
-              onClose();
-            })
-            .catch(() => {
-              auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                  const u = userCredential.user;
-                  const name = u.email.split('@')[0];
-                  setUser({ name, email: u.email });
-                  db.collection('users').doc(u.email).set({
-                    name: name,
-                    email: u.email,
-                    points: 0
-                  });
-                  showToast("¡Cuenta creada y sesión iniciada! 🎉");
-                  onClose();
-                })
-                .catch((err) => {
-                  alert("Error de autenticación: " + err.message);
-                });
-            });
+          setDone(true);
+          setTimeout(() => {
+            showToast(`¡Cupo reservado con éxito! Revisa tu correo ${email}`);
+            onClose();
+          }, 1800);
         };
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 relative">
-              <button onClick={onClose} className="absolute top-4 right-4 font-bold">✕</button>
-              <h3 className="text-xl font-bold text-slate-900">Iniciar Sesión en RENOVA</h3>
-              <p className="text-xs text-slate-600">Conéctate mediante Firebase para guardar tus puntos y aparecer en la clasificación.</p>
-              <form onSubmit={handleFirebaseLogin} className="space-y-3">
-                <input type="email" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs" required />
-                <input type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-3 py-2 border rounded-xl text-xs" required />
-                <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs">Entrar / Registrarse</button>
-              </form>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5 relative">
+              <button onClick={onClose} className="absolute top-4 right-4 font-bold text-slate-400 hover:text-slate-600">✕</button>
+
+              {done ? (
+                <div className="text-center py-6 space-y-3">
+                  <h3 className="text-xl font-bold text-slate-800">¡Lugar Reservado!</h3>
+                  <p className="text-xs text-slate-600">Te enviaremos el pase digital y el enlace de acceso.</p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <span className="text-xs font-bold text-emerald-700 uppercase">Reserva de Entrada Gratuita</span>
+                    <h3 className="text-xl font-bold text-slate-900 mt-1">{conference.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1">Impartido por: {conference.speaker}</p>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Correo para enviar el boleto:</label>
+                      <input 
+                        type="email" 
+                        required 
+                        placeholder="tu@correo.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow transition">
+                      Confirmar mi Pase Gratuito
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      function RecyclingGuideSection() {
+        const [activeBin, setActiveBin] = useState('organico');
+
+        const binDetails = {
+          organico: {
+            color: 'bg-amber-700',
+            title: 'Contenedor Orgánico (Marrón / Verde Cobre)',
+            accepts: ['Restos de verduras y frutas', 'Cáscaras de huevo', 'Posos de café y té', 'Hojas secas y restos de jardín'],
+            rejects: ['Plásticos', 'Aceite comestible usado', 'Pañales o toallitas', 'Huesos grandes en exceso'],
+            tip: 'Ideal para compostaje casero. Reduce el 40% de la basura de tu hogar.'
+          },
+          inorganico: {
+            color: 'bg-emerald-600',
+            title: 'Envases y Plásticos (Verde / Amarillo)',
+            accepts: ['Botellas de PET (agua, refrescos)', 'Envases HDPE (detergentes, champú)', 'Latas de aluminio y conserva', 'Brik / Envases multilaminados'],
+            rejects: ['Juguetes de plástico rotos', 'Bolsas muy sucias de grasa', 'Aparatos electrónicos'],
+            tip: 'Lava y aplasta tus botellas antes de depositarlas para ahorrar espacio.'
+          },
+          papel: {
+            color: 'bg-blue-600',
+            title: 'Papel y Cartón (Azul)',
+            accepts: ['Cajas de cartón corrugado', 'Periódicos y revistas', 'Hojas de papel impresas', 'Tubos de papel higiénico'],
+            rejects: ['Cajas de pizza con mucha grasa', 'Papel servilleta usado', 'Papel plastificado o térmico'],
+            tip: 'Desarma las cajas para que ocupen menos espacio en la estación de recolección.'
+          },
+          vidrio: {
+            color: 'bg-teal-700',
+            title: 'Vidrio (Verde Oscuro)',
+            accepts: ['Frascos de conservas o mermelada', 'Botellas de vidrio transparente o ámbar'],
+            rejects: ['Espejos o cristales rotos', 'Focos o bombillas', 'Vajilla de cerámica o pirex'],
+            tip: 'Quita las tapas de metal y recíclalas en el contenedor de latas.'
+          }
+        };
+
+        const current = binDetails[activeBin];
+
+        return (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Aprende a Separar en Casa</span>
+              <h1 className="text-3xl font-black text-slate-900">Guía Práctica de Clasificación</h1>
+              <p className="text-slate-600 text-sm">
+                Haz clic en cada contenedor para aprender qué materiales van en cada lugar y evitar la contaminación cruzada.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { key: 'organico', name: 'Orgánicos', color: 'bg-amber-800' },
+                { key: 'inorganico', name: 'Plásticos & Latas', color: 'bg-emerald-600' },
+                { key: 'papel', name: 'Papel & Cartón', color: 'bg-blue-600' },
+                { key: 'vidrio', name: 'Vidrio', color: 'bg-teal-700' },
+              ].map((bin) => (
+                <button
+                  key={bin.key}
+                  onClick={() => setActiveBin(bin.key)}
+                  className={`p-5 rounded-2xl border transition-all text-left flex flex-col justify-between h-28 ${
+                    activeBin === bin.key
+                      ? `${bin.color} text-white shadow-xl ring-4 ring-emerald-500/20 scale-105`
+                      : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="font-extrabold text-sm sm:text-base">{bin.name}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-lg grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-8 rounded-full ${current.color}`}></div>
+                  <h3 className="text-xl font-bold text-slate-900">{current.title}</h3>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Sí se recicla aquí:</h4>
+                  <ul className="space-y-1.5 text-sm text-slate-700">
+                    {current.accepts.map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2 bg-emerald-50/60 p-2 rounded-lg border border-emerald-100">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-100 md:pl-8 pt-4 md:pt-0">
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-rose-700 uppercase tracking-wider">NO depositar aquí:</h4>
+                  <ul className="space-y-1.5 text-sm text-slate-700">
+                    {current.rejects.map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2 bg-rose-50/60 p-2 rounded-lg border border-rose-100">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-1">
+                  <p className="font-bold text-amber-800">Consejos RENOVA:</p>
+                  <p className="leading-relaxed">{current.tip}</p>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -696,7 +840,7 @@
       function Footer() {
         return (
           <footer className="bg-slate-900 text-white border-t border-slate-800 py-8 text-center text-xs text-slate-400">
-            Eco Huella • Menos huella. Más futuro. • {new Date().getFullYear()} RENOVA
+            RENOVA • Menos huella. Más futuro. • {new Date().getFullYear()}
           </footer>
         );
       }

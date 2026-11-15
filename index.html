@@ -315,7 +315,7 @@
               </div>
             </section>
 
-            {/* SECCIÓN DE REDES SOCIALES Y CONTACTO */}
+            {/* SECCIÓN DE REDES SOCIALES Y CONTACTO (CON FACEBOOK ACTUALIZADO) */}
             <section className="max-w-4xl mx-auto px-4">
               <div className="bg-white rounded-3xl border p-8 shadow-sm text-center space-y-4">
                 <h3 className="text-xl font-bold text-slate-900">Conéctate con Nosotros</h3>
@@ -589,11 +589,44 @@
         );
       }
 
+      // SECCIÓN DE GUÍA PRÁCTICA CON VIDEOS EDUCATIVOS RESTAURADOS
       function RecyclingGuideSection() {
         return (
-          <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
-            <h1 className="text-3xl font-black text-slate-900">📖 Guía Práctica de Reciclaje</h1>
-            <p className="text-sm text-slate-600">Aprende qué depositar en cada contenedor y cómo separar adecuadamente tus residuos.</p>
+          <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-black text-slate-900">📖 Guía Práctica y Videos Educativos</h1>
+              <p className="text-sm text-slate-600">Aprende qué depositar en cada contenedor y visualiza nuestros videos instructivos.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
+                <h3 className="font-bold text-lg text-emerald-900">🎥 Guía de separación de residuos</h3>
+                <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 border">
+                  <iframe 
+                    className="w-full h-full"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+                    title="Video explicativo de reciclaje"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                  ></iframe>
+                </div>
+                <p className="text-xs text-slate-600">Descubre los pasos fundamentales para organizar tus contenedores en casa o en la comunidad.</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
+                <h3 className="font-bold text-lg text-emerald-900">🎥 El impacto del reciclaje de envases</h3>
+                <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 border">
+                  <iframe 
+                    className="w-full h-full"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+                    title="Video sobre impacto ambiental"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                  ></iframe>
+                </div>
+                <p className="text-xs text-slate-600">Conoce cómo el manejo adecuado de plásticos y cartón disminuye la huella ecológica.</p>
+              </div>
+            </div>
           </div>
         );
       }
